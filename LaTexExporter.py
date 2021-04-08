@@ -14,7 +14,7 @@ def export(rounds: [Round], file_name: str, m: int, c: float):
     write_analysis(f, rounds, m, c)
 
     # finish document and close file
-    f.write("\end{document}\n")
+    f.write("\\end{document}\n")
     f.close()
 
 
@@ -24,7 +24,6 @@ def write_overview(f, rounds: [Round], m: int, c: float):
     f.write("Proof: We will construct a job sequence $\\sigma$ such that $A(\\sigma) \\geq " + str(c) +
             "\\cdot OPT(\\sigma)$. The job sequence consists of several rounds. We assume that m is a multiple of "
             + str(m) + ". \\newline\n")
-
 
     for round in rounds:
         f.write(round.get_overview(len(rounds)))

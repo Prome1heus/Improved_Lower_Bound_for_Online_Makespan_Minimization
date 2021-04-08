@@ -27,7 +27,7 @@ class SubRound:
             multiplicity: int,
             m: int
     ):
-        self.schedule = [[] for j in range(m)]
+        self.schedule = [[] for _ in range(m)]
         self.set_schedule(indicator_variables, jobs, solver, len(jobs), m)
         self.cutoff_value = cutoff_value
         self.job_size = job_size
@@ -48,18 +48,18 @@ class SubRound:
             max_number_of_jobs_on_any_machine = max(max_number_of_jobs_on_any_machine, len(machine))
 
         # format table
-        result  = "\\begin{table}[hp]\n"
+        result = "\\begin{table}[hp]\n"
         result += "\\centering\n"
         result += "\\begin{adjustbox}{width=1\\textwidth}\n"
         result += "\\small\n"
         result += "\\begin{tabular}{|"
-        for machine in self.schedule:
+        for _ in self.schedule:
             result += " c |"
         result += "}\n \\hline \n"
 
         # create rows
         for i in range(max_number_of_jobs_on_any_machine):
-            for  (j, machine) in enumerate(self.schedule):
+            for (j, machine) in enumerate(self.schedule):
                 if len(machine) > i:
                     result += str(machine[i])
                 if j == self.m - 1:
@@ -90,7 +90,3 @@ class SubRound:
 
     def set_identifier(self, identifier):
         self.identifier = identifier
-
-
-
-

@@ -45,8 +45,8 @@ if __name__ == '__main__':
     multiplication_factor = 1000
 
     while True:
-        job_size = float(input('Enter new job size\n'))
-        if job_size == 0:
+        next_input = float(input('Enter new job size\n'))
+        if next_input == 0:
             handle_finish()
             break
-        handle_next_command(job_size)
+        handle_next_command(next_input)
