@@ -24,7 +24,6 @@ def handle_next_command(job_size: int):
         print('The subround could not be scheduled. Try with other values')
     else:
         print('Subround successfully scheduled')
-        print(sub_round)
         rounds[len(rounds) - 1].add_sub_round(sub_round)
         if rounds[len(rounds) - 1].get_number_of_jobs_left() == 0:
             rounds.append(Round(len(rounds) + 1, m))

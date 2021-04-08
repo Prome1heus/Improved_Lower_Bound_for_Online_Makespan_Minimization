@@ -1,7 +1,8 @@
+import SchedulePlotter
 from Round import Round
 
 
-def export(rounds: [Round], file_name: str, m: int, c: float):
+def export(rounds: [Round], file_name: str, m: int, c: float, use_images=True):
     f = open(file_name, 'w')
 
     # setup as subfile for LaTex project
@@ -11,7 +12,7 @@ def export(rounds: [Round], file_name: str, m: int, c: float):
     # write proof
     write_overview(f, rounds, m, c)
     f.write("\n")
-    write_analysis(f, rounds, m, c)
+    write_analysis(f, rounds, m, c, use_images)
 
     # finish document and close file
     f.write("\\end{document}\n")
@@ -29,12 +30,12 @@ def write_overview(f, rounds: [Round], m: int, c: float):
         f.write(round.get_overview(len(rounds)))
 
 
-def write_analysis(f, rounds: [Round], m: int, c: float):
+def write_analysis(f, rounds: [Round], m: int, c: float, use_images: bool):
     f.write("In the following, when analyzing the various subrounds, we will often compare " +
             "the makespan produced by an online algorithm A in a subround to the optimum" +
             "makespan at the end of the subround. It is clear that the optimum makespan during" +
             "the subround can only be smaller. \\newline \n")
 
     for round in rounds:
-        f.write(round.get_analysis())
+        f.write(round.get_analysis(use_images))
         f.write("\\par\n")
