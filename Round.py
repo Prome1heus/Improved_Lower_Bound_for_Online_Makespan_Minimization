@@ -1,0 +1,43 @@
+from SubRound import SubRound
+
+
+class Round:
+
+    def __init__(self, index, m):
+        self.sub_rounds = []
+        self.index = index
+        self.m = m
+
+    def add_sub_round(self, sub_round: SubRound):
+        self.sub_rounds.append(sub_round)
+
+    def get_overview(self, list_size):
+        symbol = chr(ord('z')-list_size+self.index+1)
+        if len(self.sub_rounds) == 0:
+            return ""
+        elif len(self.sub_rounds) == 1:
+            return "Round " + str(self.index) + ": " + self.sub_rounds[0].get_overview(symbol) + "\\newline \n"
+        else:
+            result = "Round " + str(self.index) + ":\\begin{itemize}\n"
+            for (i, sub_round) in enumerate(self.sub_rounds):
+                result += "\\item Subround " + str(self.index) + "." + str(i+1) + ": " + \
+                          sub_round.get_overview("$" + symbol + "_" + str(i+1) + "$") + "\n"
+            result += "\\end{itemize}"
+            return result
+
+    def get_analysis(self):
+        if len(self.sub_rounds) == 0:
+            return ""
+        elif len(self.sub_rounds) == 1:
+            return "Round " + str(self.index) + ": " + self.sub_rounds[0].get_analysis() + "\\newline \n"
+        else:
+            result = ""
+            for (i, sub_round) in enumerate(self.sub_rounds):
+                result += "Subround " + str(self.index) + "." + str(i+1) + ": \\newline \n" + sub_round.get_analysis() + "\n"
+            return result + "\\newline\n"
+
+    def get_number_of_jobs_left(self):
+        result = self.m
+        for sub_round in self.sub_rounds:
+            result -= sub_round.get_multiplicity()
+        return result
