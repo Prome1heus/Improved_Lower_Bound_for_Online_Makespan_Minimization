@@ -33,12 +33,13 @@ class SubRound:
         self.job_size = job_size
         self.multiplicity = multiplicity
         self.m = m
+        self.identifier = ""
 
     def __str__(self):
         return str(self.schedule)
 
-    def get_overview(self, identifier: str):
-        return str(self.multiplicity) + " jobs with a processing time of " + identifier + \
+    def get_overview(self):
+        return str(self.multiplicity) + " jobs with a processing time of " + self.identifier + \
                " = " + str(self.job_size)
 
     def get_latex_table(self):
@@ -86,6 +87,9 @@ class SubRound:
 
     def get_multiplicity(self):
         return self.multiplicity
+
+    def set_identifier(self, identifier):
+        self.identifier = identifier
 
 
 

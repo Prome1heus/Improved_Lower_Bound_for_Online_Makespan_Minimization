@@ -12,16 +12,15 @@ class Round:
         self.sub_rounds.append(sub_round)
 
     def get_overview(self, list_size):
-        symbol = chr(ord('z')-list_size+self.index+1)
         if len(self.sub_rounds) == 0:
             return ""
         elif len(self.sub_rounds) == 1:
-            return "Round " + str(self.index) + ": " + self.sub_rounds[0].get_overview(symbol) + "\\newline \n"
+            return "Round " + str(self.index) + ": " + self.sub_rounds[0].get_overview() + "\\newline \n"
         else:
             result = "Round " + str(self.index) + ":\\begin{itemize}\n"
             for (i, sub_round) in enumerate(self.sub_rounds):
                 result += "\\item Subround " + str(self.index) + "." + str(i+1) + ": " + \
-                          sub_round.get_overview("$" + symbol + "_" + str(i+1) + "$") + "\n"
+                          sub_round.get_overview() + "\n"
             result += "\\end{itemize}"
             return result
 
@@ -41,3 +40,11 @@ class Round:
         for sub_round in self.sub_rounds:
             result -= sub_round.get_multiplicity()
         return result
+
+    def initialize_identifiers(self, list_size: int):
+        round_identifier = chr(ord('z') - list_size + self.index + 1)
+        if len(self.sub_rounds) == 1:
+            self.sub_rounds[0].set_identifier("$" + round_identifier + "$")
+        else:
+            for (i, sub_round) in enumerate(self.sub_rounds):
+                sub_round.set_identifier("$" + round_identifier + "_" + str(i+1) + "$")

@@ -31,6 +31,8 @@ def handle_next_command(job_size: int):
 
 
 def handle_finish():
+    for round in rounds:
+        round.initialize_identifiers(len(rounds))
     LaTexExporter.export(rounds, "test.out", m, c)
 
 
