@@ -3,7 +3,7 @@ from ortools.sat.python import cp_model
 from SubRound import SubRound
 
 
-def solve(jobs, m, cutoff_value, job_size, multiplicity):
+def solve(jobs, m, c, cutoff_value, job_size, multiplicity):
     model = cp_model.CpModel()
     indicator_variables = {}
 
@@ -25,6 +25,6 @@ def solve(jobs, m, cutoff_value, job_size, multiplicity):
     status = solver.Solve(model)
 
     if status == cp_model.OPTIMAL:
-        return SubRound(indicator_variables, solver, jobs, cutoff_value, job_size, multiplicity, m)
+        return SubRound(indicator_variables, solver, jobs, cutoff_value, job_size, multiplicity, m, c)
     else:
         return None

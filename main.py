@@ -18,7 +18,7 @@ def handle_next_command(job_size: int):
 
     cutoff_value = int(cutoff_value/c)
 
-    sub_round = BinPackingSolver.solve(jobs_so_far, m, cutoff_value, job_size, multiplicity)
+    sub_round = BinPackingSolver.solve(jobs_so_far, m, c, cutoff_value, job_size, multiplicity)
 
     if sub_round is None:
         print('The subround could not be scheduled. Try with other values')

@@ -28,7 +28,8 @@ class SubRound:
             cutoff_value: int,
             job_size: int,
             multiplicity: int,
-            m: int
+            m: int,
+            c: float
     ):
         self.schedule = [[] for _ in range(m)]
         self.set_schedule(indicator_variables, jobs, solver, len(jobs), m)
@@ -36,7 +37,9 @@ class SubRound:
         self.job_size = job_size
         self.multiplicity = multiplicity
         self.m = m
+        self.c = c
         self.identifier = ""
+        self.name = ""
 
     def __str__(self):
         return str(self.schedule)
@@ -85,29 +88,51 @@ class SubRound:
         result += "\\end{table}"
         return result
 
-    def get_image(self, index: int):
-        subround_index = re.sub("[^0-9]", "", self.identifier)
-        if len(subround_index) == 1:
-            filename = "Subround" + str(index) + "." + subround_index
-        else:
-            filename = "Round" + str(index)
+    def get_image(self):
+
         result = "\\begin{figure}[h]\n"
         result += "\\centering"
-        result += "\\includegraphics[scale = 0.35]{" + filename + ".png}\n"
-        result += "\\caption{Example Schedule after " + filename + " with a makespan of " + \
+        result += "\\includegraphics[scale = 0.35]{" + self.name + ".png}\n"
+        result += "\\caption{Example Schedule after " + self.name + " with a makespan of " + \
                   str(self.get_makespan()) + "}\n"
         result += "\\end{figure}\n"
-        SchedulePlotter.plot_schedule(self, filename)
+        SchedulePlotter.plot_schedule(self, self.name)
         return result
 
-    def get_analysis(self, use_images, index=0):
-        if use_images:
-            return self.get_image(index)
+    def cost_on_different_machines(self, rounds, index, sub_round_index):
+        if sub_round_index == 1:
+            jobs_to_consider = [round.sub_rounds[0].get_identifier() for (i, round) in enumerate(rounds) if i < index-1]
+            min_cost = sum([round.sub_rounds[0].job_size for (i, round) in enumerate(rounds) if i < index - 1])
+            jobs_to_consider.append("2"+self.get_identifier())
+            min_cost += 2 * self.job_size
         else:
-            return self.get_latex_table()
+            jobs_to_consider = [round.sub_rounds[0].get_identifier() for (i, round) in enumerate(rounds) if i < index]
+            min_cost = sum([round.sub_rounds[0].job_size for (i, round) in enumerate(rounds) if i < index])
+            jobs_to_consider.append(self.get_identifier())
+            min_cost += self.job_size
+        return " + ".join(jobs_to_consider) + " = $" + str(min_cost) + " > " + str(self.c*self.get_makespan()) + \
+               " = " + str(self.c) + "\\cdot " + str(self.get_makespan()) + "$"
+
+    def get_analysis(self, use_images, index, sub_round_index, rounds):
+        result = "By the example schedule below, the optimum makespan is at most " + str(self.get_makespan()) + ". "
+        result += "If A does not schedule the jobs in " + self.name + " on different machines, then its makespan is at "
+        result += "least " + self.cost_on_different_machines(rounds, index, sub_round_index)
+        if use_images:
+            result += self.get_image()
+        else:
+            result += self.get_latex_table()
+        return result
 
     def get_multiplicity(self):
         return self.multiplicity
 
-    def set_identifier(self, identifier):
+    def set_identifier(self, identifier, index):
         self.identifier = identifier
+        subround_index = re.sub("[^0-9]", "", self.identifier)
+        if len(subround_index) == 1:
+            self.name = "Subround" + str(index) + "." + subround_index
+        else:
+            self.name = "Round" + str(index)
+
+    def get_identifier(self):
+        return self.identifier

@@ -37,5 +37,5 @@ def write_analysis(f, rounds: [Round], m: int, c: float, use_images: bool):
             "the subround can only be smaller. \\newline \n")
 
     for round in rounds:
-        f.write(round.get_analysis(use_images))
+        f.write(round.get_analysis(rounds, use_images))
         f.write("\\par\n")
