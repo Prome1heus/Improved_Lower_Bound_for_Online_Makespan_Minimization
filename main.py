@@ -1,22 +1,21 @@
 import BinPackingSolver
 import LaTexExporter
 from Round import Round
+from fractions import Fraction
 
 
-def handle_next_command(job_size: int):
-    job_size = int(multiplication_factor * job_size)
+def handle_next_command(job_size: Fraction):
     multiplicity = int(input('Enter the desired number of jobs\n'))
 
     # add subround to job list
     for i in range(multiplicity):
         jobs_so_far.append(job_size)
-
     cutoff_value = 0
     for i in range(0, len(jobs_so_far), m):
         cutoff_value += jobs_so_far[i]
     cutoff_value += job_size
 
-    cutoff_value = int(cutoff_value/c)
+    cutoff_value = cutoff_value/c
 
     sub_round = BinPackingSolver.solve(jobs_so_far, m, c, cutoff_value, job_size, multiplicity)
 
@@ -37,14 +36,13 @@ def handle_finish():
 
 if __name__ == '__main__':
     m = int(input('Enter the number of machines\n'))
-    c = float(input('Enter the competitive ratio\n'))
-    jobs_so_far = []
+    c = Fraction(input('Enter the competitive ratio\n'))
+    jobs_so_far: [Fraction] = []
     rounds = [Round(1, m)]
     index = 2
-    multiplication_factor = 1000
 
     while True:
-        next_input = float(input('Enter new job size\n'))
+        next_input = Fraction(input('Enter new job size\n'))
         if next_input == 0:
             handle_finish()
             break

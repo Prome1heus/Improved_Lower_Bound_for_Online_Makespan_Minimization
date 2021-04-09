@@ -46,7 +46,7 @@ class SubRound:
 
     def get_overview(self):
         return str(self.multiplicity) + " jobs with a processing time of " + self.identifier + \
-               " = " + str(self.job_size)
+               " = " + str(float(self.job_size))
 
     def get_makespan(self):
         makespan = 0
@@ -76,7 +76,7 @@ class SubRound:
         for i in range(max_number_of_jobs_on_any_machine):
             for (j, machine) in enumerate(self.schedule):
                 if len(machine) > i:
-                    result += str(machine[i])
+                    result += str(float(machine[i]))
                 if j == self.m - 1:
                     result += "\\\\\n"
                 else:
@@ -89,12 +89,11 @@ class SubRound:
         return result
 
     def get_image(self):
-
         result = "\\begin{figure}[h]\n"
         result += "\\centering"
         result += "\\includegraphics[scale = 0.35]{" + self.name + ".png}\n"
         result += "\\caption{Example Schedule after " + self.name + " with a makespan of " + \
-                  str(self.get_makespan()) + "}\n"
+                  str(float(self.get_makespan())) + "}\n"
         result += "\\end{figure}\n"
         SchedulePlotter.plot_schedule(self, self.name)
         return result
@@ -110,11 +109,12 @@ class SubRound:
             min_cost = sum([round.sub_rounds[0].job_size for (i, round) in enumerate(rounds) if i < index])
             jobs_to_consider.append(self.get_identifier())
             min_cost += self.job_size
-        return " + ".join(jobs_to_consider) + " = $" + str(min_cost) + " > " + str(self.c*self.get_makespan()) + \
-               " = " + str(self.c) + "\\cdot " + str(self.get_makespan()) + "$"
+        return " + ".join(jobs_to_consider) + " = $" + str(float(min_cost)) + " > " + str(float(self.c*self.get_makespan())) + \
+               " = " + str(float(self.c)) + "\\cdot " + str(float(self.get_makespan())) + "$"
 
     def get_analysis(self, use_images, index, sub_round_index, rounds):
-        result = "By the example schedule below, the optimum makespan is at most " + str(self.get_makespan()) + ". "
+        result = "By the example schedule below, the optimum makespan is at most {0}. ".format(
+            str(float(self.get_makespan())))
         result += "If A does not schedule the jobs in " + self.name + " on different machines, then its makespan is at "
         result += "least " + self.cost_on_different_machines(rounds, index, sub_round_index)
         if use_images:

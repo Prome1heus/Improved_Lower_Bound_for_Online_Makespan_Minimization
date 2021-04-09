@@ -42,9 +42,9 @@ def plot_schedule(sub_round, figure_name: str):
     for i in range(max_number_of_jobs_on_machine):
         for j in range(sub_round.m):
             if len(sub_round.schedule[j]) > i:
-                layers[i].append(sub_round.schedule[j][i])
+                layers[i].append(float(sub_round.schedule[j][i]))
             else:
-                layers[i].append(0)
+                layers[i].append(0.0)
 
     plot_stacked_bar(layers, sub_round.cutoff_value)
 
