@@ -1,3 +1,5 @@
+from fractions import Fraction
+
 from ortools.sat.python import cp_model
 from ortools.sat.python.cp_model import IntVar
 import re
@@ -10,15 +12,16 @@ class SubRound:
     def set_schedule(
             self,
             indicator_variables: {(int, int), IntVar},
-            jobs: [int],  # the sizes of the jobs
+            jobs: [Fraction],  # the sizes of the jobs
             solver: cp_model,  # feasible assignment of indicator variables
             n: int,  # number of jobs to schedule
-            m: int  # number of machines
+            m: int,  # number of machines
+            scale_factor: int
     ):
-        for i in range(n):
+        for job in set(jobs):
             for j in range(m):
-                if solver.Value(indicator_variables[(i, j)]):
-                    self.schedule[j].append(jobs[i])
+                for i in range(solver.Value(indicator_variables[(int(job*scale_factor), j)])):
+                    self.schedule[j].append(job)
 
     def __init__(
             self,
@@ -29,10 +32,11 @@ class SubRound:
             job_size: int,
             multiplicity: int,
             m: int,
-            c: float
+            c: float,
+            scale_factor: int
     ):
         self.schedule = [[] for _ in range(m)]
-        self.set_schedule(indicator_variables, jobs, solver, len(jobs), m)
+        self.set_schedule(indicator_variables, jobs, solver, len(jobs), m, scale_factor)
         self.cutoff_value = cutoff_value
         self.job_size = job_size
         self.multiplicity = multiplicity

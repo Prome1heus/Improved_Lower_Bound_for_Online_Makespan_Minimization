@@ -19,21 +19,30 @@ def solve(jobs: [Fraction], m: int, c: Fraction, cutoff_value: Fraction, job_siz
     indicator_variables = {}
 
     scale_factor = get_common_denominator(jobs, c)
-    scaled_jobs = [int(scale_factor * job) for job in jobs]
+    scaled_jobs = [int(job * scale_factor) for job in jobs]
     scaled_cutoff_value = int(scale_factor * cutoff_value)
 
-    # create indicator variables
-    for i in range(len(jobs)):
-        for j in range(m):
-            indicator_variables[(i, j)] = model.NewBoolVar('job_%i_machine_%i' % (i, j))
+    multiplicity_per_job_size = {}
+    for job in scaled_jobs:
+        if job in multiplicity_per_job_size:
+            multiplicity_per_job_size[job] += 1
+        else:
+            multiplicity_per_job_size[job] = 1
 
-    # ensure that each job is scheduled on exactly one machine
-    for i in range(len(jobs)):
-        model.Add(sum(indicator_variables[(i, j)] for j in range(m)) == 1)
+    # create indicator variables
+    for job, multiplicity in multiplicity_per_job_size.items():
+        for j in range(m):
+            indicator_variables[(job, j)] = model.NewIntVar(0, multiplicity,
+                                                            'job_%i_machine_%i' % (job, j))
+
+    # ensure that each job is scheduled on exactly once
+    for job, multiplicity in multiplicity_per_job_size.items():
+        model.Add(sum(indicator_variables[(job, j)] for j in range(m)) == multiplicity)
 
     # ensure that the makespan is less than the cutoff value
     for j in range(m):
-        model.Add(sum(indicator_variables[(i, j)] * scaled_jobs[i] for i in range(len(jobs))) <= scaled_cutoff_value)
+        model.Add(sum(indicator_variables[(job, j)] * job for job in multiplicity_per_job_size.keys())
+                  <= scaled_cutoff_value)
 
     solver = cp_model.CpSolver()
     solver.parameters.max_time_in_seconds = 100.0
@@ -41,9 +50,9 @@ def solve(jobs: [Fraction], m: int, c: Fraction, cutoff_value: Fraction, job_siz
 
     if status == cp_model.OPTIMAL:
         if final:
-            return FinalSubRound(indicator_variables, solver, jobs, cutoff_value, job_size, multiplicity, m, c)
+            return FinalSubRound(indicator_variables, solver, jobs, cutoff_value, job_size, multiplicity, m, c, scale_factor)
         else:
-            return SubRound(indicator_variables, solver, jobs, cutoff_value, job_size, multiplicity, m, c)
+            return SubRound(indicator_variables, solver, jobs, cutoff_value, job_size, multiplicity, m, c, scale_factor)
     else:
         for i in range(multiplicity):
             jobs.pop()
