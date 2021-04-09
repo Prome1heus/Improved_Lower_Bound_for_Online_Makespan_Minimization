@@ -45,7 +45,11 @@ class SubRound:
         return str(self.schedule)
 
     def get_overview(self):
-        return str(self.multiplicity) + " jobs with a processing time of " + self.identifier + \
+        if self.multiplicity == self.m:
+            number_of_jobs = "m"
+        else:
+            number_of_jobs = "$\\frac{ " + str(self.multiplicity) + "}{" + str(self.m) + "}$m"
+        return number_of_jobs + " jobs with a processing time of " + self.identifier + \
                " = " + str(float(self.job_size))
 
     def get_makespan(self):
@@ -100,16 +104,18 @@ class SubRound:
 
     def cost_on_different_machines(self, rounds, index, sub_round_index):
         if sub_round_index == 1:
-            jobs_to_consider = [round.sub_rounds[0].get_identifier() for (i, round) in enumerate(rounds) if i < index-1]
+            jobs_to_consider = [round.sub_rounds[0].get_identifier() for (i, round) in enumerate(rounds) if
+                                i < index - 1]
             min_cost = sum([round.sub_rounds[0].job_size for (i, round) in enumerate(rounds) if i < index - 1])
-            jobs_to_consider.append("2"+self.get_identifier())
+            jobs_to_consider.append("2" + self.get_identifier())
             min_cost += 2 * self.job_size
         else:
             jobs_to_consider = [round.sub_rounds[0].get_identifier() for (i, round) in enumerate(rounds) if i < index]
             min_cost = sum([round.sub_rounds[0].job_size for (i, round) in enumerate(rounds) if i < index])
             jobs_to_consider.append(self.get_identifier())
             min_cost += self.job_size
-        return " + ".join(jobs_to_consider) + " = $" + str(float(min_cost)) + " > " + str(float(self.c*self.get_makespan())) + \
+        return " + ".join(jobs_to_consider) + " = $" + str(float(min_cost)) + " > " + str(
+            float(self.c * self.get_makespan())) + \
                " = " + str(float(self.c)) + "\\cdot " + str(float(self.get_makespan())) + "$"
 
     def get_analysis(self, use_images, index, sub_round_index, rounds):

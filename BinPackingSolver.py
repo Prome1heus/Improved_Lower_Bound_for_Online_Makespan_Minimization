@@ -3,6 +3,7 @@ import numpy as np
 
 from ortools.sat.python import cp_model
 
+from FinalSubRound import FinalSubRound
 from SubRound import SubRound
 
 
@@ -13,7 +14,7 @@ def get_common_denominator(jobs: [Fraction], c: Fraction):
     return current_lcm
 
 
-def solve(jobs: [Fraction], m: int, c: Fraction, cutoff_value: Fraction, job_size: Fraction, multiplicity: int):
+def solve(jobs: [Fraction], m: int, c: Fraction, cutoff_value: Fraction, job_size: Fraction, multiplicity: int, final=False):
     model = cp_model.CpModel()
     indicator_variables = {}
 
@@ -35,10 +36,15 @@ def solve(jobs: [Fraction], m: int, c: Fraction, cutoff_value: Fraction, job_siz
         model.Add(sum(indicator_variables[(i, j)] * scaled_jobs[i] for i in range(len(jobs))) <= scaled_cutoff_value)
 
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 10.0
+    solver.parameters.max_time_in_seconds = 100.0
     status = solver.Solve(model)
 
     if status == cp_model.OPTIMAL:
-        return SubRound(indicator_variables, solver, jobs, cutoff_value, job_size, multiplicity, m, c)
+        if final:
+            return FinalSubRound(indicator_variables, solver, jobs, cutoff_value, job_size, multiplicity, m, c)
+        else:
+            return SubRound(indicator_variables, solver, jobs, cutoff_value, job_size, multiplicity, m, c)
     else:
+        for i in range(multiplicity):
+            jobs.pop()
         return None

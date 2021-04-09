@@ -44,7 +44,7 @@ class Round:
         return result
 
     def initialize_identifiers(self, list_size: int):
-        round_identifier = chr(ord('z') - list_size + self.index + 1)
+        round_identifier = chr(ord('z') - list_size + self.index)
         if len(self.sub_rounds) == 1:
             self.sub_rounds[0].set_identifier("$" + round_identifier + "$", self.index)
         else:
