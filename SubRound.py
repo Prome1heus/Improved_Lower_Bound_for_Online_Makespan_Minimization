@@ -22,6 +22,7 @@ class SubRound:
             for j in range(m):
                 for i in range(solver.Value(indicator_variables[(int(job*scale_factor), j)])):
                     self.schedule[j].append(job)
+        self.schedule.sort(reverse=True)
 
     def __init__(
             self,
