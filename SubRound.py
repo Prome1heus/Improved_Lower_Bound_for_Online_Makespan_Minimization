@@ -27,12 +27,12 @@ class SubRound:
             self,
             indicator_variables: {(int, int), IntVar},
             solver: cp_model,
-            jobs: [int],
-            cutoff_value: int,
-            job_size: int,
+            jobs: [Fraction],
+            cutoff_value: Fraction,
+            job_size: Fraction,
             multiplicity: int,
             m: int,
-            c: float,
+            c: Fraction,
             scale_factor: int
     ):
         self.schedule = [[] for _ in range(m)]
