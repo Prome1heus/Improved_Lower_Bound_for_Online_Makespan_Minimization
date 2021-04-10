@@ -98,12 +98,13 @@ class SubRound:
         return result
 
     def get_image(self):
-        result = "\\begin{figure}[h]\n"
+        result = "\\begin{figure}[!htbp]\n"
         result += "\\centering"
         result += "\\includegraphics[scale = 0.35]{" + self.name + ".png}\n"
         result += "\\caption{Example Schedule after " + self.name + " with a makespan of " + \
                   str(float(self.get_makespan())) + "}\n"
         result += "\\end{figure}\n"
+        result += "\\FloatBarrier\n"
         SchedulePlotter.plot_schedule(self, self.name)
         return result
 
@@ -123,11 +124,51 @@ class SubRound:
             float(self.c * self.get_makespan())) + \
                " = " + str(float(self.c)) + "\\cdot " + str(float(self.get_makespan())) + "$"
 
+    def get_assignment_per_machine(self, rounds):
+        symbol_per_job_size = {}
+        for round in rounds:
+            for sub_round in round.sub_rounds:
+                symbol_per_job_size[sub_round.get_job_size()] = sub_round.get_identifier()
+        result = "The assignment on the example schedule is as follows: \n"
+        result += "\\begin{itemize}\n"
+        last_machine = None
+
+        # count how many machines have the same schedule
+        multiplicity_per_schedule = {}
+        for machine in self.schedule:
+            if tuple(machine) in multiplicity_per_schedule:
+                multiplicity_per_schedule[tuple(machine)] += 1
+            else:
+                multiplicity_per_schedule[tuple(machine)] = 1
+
+        for machine, multiplicity_of_machine in multiplicity_per_schedule.items():
+            number_of_jobs_per_size = {}
+            for job in machine:
+                if job in number_of_jobs_per_size:
+                    number_of_jobs_per_size[job] += 1
+                else:
+                    number_of_jobs_per_size[job] = 1
+            result += "\\item $\\frac{" + str(multiplicity_of_machine) + "}{" + str(self.m) + \
+                      "}$ machines with a workload of "
+            jobs = []
+            sum = 0
+            for job, multiplicity in number_of_jobs_per_size.items():
+                sum += multiplicity*job
+                if multiplicity > 1:
+                    jobs.append(str(multiplicity) + symbol_per_job_size[job])
+                else:
+                    jobs.append(symbol_per_job_size[job])
+            result += " + ".join(jobs) + " = " + str(float(sum)) + "\n"
+
+        result += "\\end{itemize}\n"
+        return result
+
     def get_analysis(self, use_images, index, sub_round_index, rounds):
         result = "By the example schedule below, the optimum makespan is at most {0}. ".format(
             str(float(self.get_makespan())))
         result += "If A does not schedule the jobs in " + self.name + " on different machines, then its makespan is at "
-        result += "least " + self.cost_on_different_machines(rounds, index, sub_round_index)
+        result += "least " + self.cost_on_different_machines(rounds, index, sub_round_index) + ". \\newline \n "
+        result += self.get_assignment_per_machine(rounds)
         if use_images:
             result += self.get_image()
         else:
@@ -147,3 +188,6 @@ class SubRound:
 
     def get_identifier(self):
         return self.identifier
+
+    def get_job_size(self):
+        return self.job_size

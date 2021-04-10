@@ -29,7 +29,7 @@ class Round:
             return ""
         elif len(self.sub_rounds) == 1:
             return "Round " + str(self.index) + ": " + \
-                   self.sub_rounds[0].get_analysis(use_images, self.index, 1, rounds) + "\\newline \n"
+                   self.sub_rounds[0].get_analysis(use_images, self.index, 1, rounds) + "\n"
         else:
             result = ""
             for (i, sub_round) in enumerate(self.sub_rounds):
