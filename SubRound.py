@@ -22,7 +22,7 @@ class SubRound:
             for j in range(m):
                 for i in range(solver.Value(indicator_variables[(int(job*scale_factor), j)])):
                     self.schedule[j].append(job)
-        self.schedule.sort(reverse=True)
+        self.schedule.sort(reverse=True, key=lambda machine: (sum(machine), machine))
 
     def __init__(
             self,
@@ -131,7 +131,6 @@ class SubRound:
                 symbol_per_job_size[sub_round.get_job_size()] = sub_round.get_identifier()
         result = "The assignment on the example schedule is as follows: \n"
         result += "\\begin{itemize}\n"
-        last_machine = None
 
         # count how many machines have the same schedule
         multiplicity_per_schedule = {}
