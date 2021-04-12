@@ -101,7 +101,7 @@ class SubRound:
         result = "\\begin{figure}[!htbp]\n"
         result += "\\centering"
         result += "\\includegraphics[scale = 0.35]{" + self.name + ".png}\n"
-        result += "\\caption{Example Schedule after " + self.name + " with a makespan of " + \
+        result += "\\caption{Example Schedule after " + self.get_formatted_name() + " with a makespan of " + \
                   str(float(self.get_makespan())) + "}\n"
         result += "\\end{figure}\n"
         result += "\\FloatBarrier\n"
@@ -165,8 +165,9 @@ class SubRound:
     def get_analysis(self, use_images, index, sub_round_index, rounds):
         result = "By the example schedule below, the optimum makespan is at most {0}. ".format(
             str(float(self.get_makespan())))
-        result += "If A does not schedule the jobs in " + self.name + " on different machines, then its makespan is at "
-        result += "least " + self.cost_on_different_machines(rounds, index, sub_round_index) + ". \\newline \n "
+        result += "If A does not schedule the jobs in " + self.get_formatted_name() + " on different machines, then "
+        result += "its makespan is at least " + self.cost_on_different_machines(rounds, index, sub_round_index)
+        result += ". \\newline \n "
         result += self.get_assignment_per_machine(rounds)
         if use_images:
             result += self.get_image()
@@ -190,3 +191,6 @@ class SubRound:
 
     def get_job_size(self):
         return self.job_size
+
+    def get_formatted_name(self):
+        return "d ".join(self.name.split("d"))
