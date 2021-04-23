@@ -12,28 +12,39 @@ class SubRound:
     def set_schedule(
             self,
             indicator_variables: {(int, int), IntVar},
-            jobs: [Fraction],  # the sizes of the jobs
+            scheduled_jobs: [Fraction],
             small_jobs: [Fraction],
-            solver: cp_model,  # feasible assignment of indicator variables
-            n: int,  # number of jobs to schedule
-            m: int,  # number of machines
+            solver: cp_model,
             scale_factor: int
     ):
-        for job in set(jobs):
-            for j in range(m):
-                for i in range(solver.Value(indicator_variables[(int(job*scale_factor), j)])):
+        """
+        sets the schedule attribute, if it is not possible to greedily schedule the small jobs with
+        respect to the cutoff value, an error is thrown
+
+        :param indicator_variables: indicate how many jobs of each type are scheduled on each machine
+        :param scheduled_jobs:      jobs that can be assigned with the indicator variables
+        :param small_jobs:          jobs that need to be assigned greedily
+        :param solver:              contains the values for the indicator variables
+        :param scale_factor:        needed to map job sizes to indicator variables
+        """
+
+        # create assignment based on indicator variables
+        for job in set(scheduled_jobs):
+            for j in range(self.m):
+                for i in range(solver.Value(indicator_variables[(int(job * scale_factor), j)])):
                     self.schedule[j].append(job)
-        print("_-------------------------------------------------------------------------------")
-        first = True
+
+        # try to schedule the remaining jobs greedily
         for job in reversed(small_jobs):
-            print("--")
             self.schedule.sort(reverse=False, key=lambda machine: (sum(machine), machine))
             self.schedule[0].append(job)
-            if sum(self.schedule[0]) > 1 and first:
-                for machine in self.schedule:
-                    print(sum(machine), machine)
-                first = False
+
+        # sort the schedule for visual uniformity
         self.schedule.sort(reverse=True, key=lambda machine: (sum(machine), machine))
+
+        # check if greedy scheduling was successfull
+        if self.get_makespan() > self.cutoff_value:
+            raise ValueError("The small jobs could not be scheduled greedily")
 
     def __init__(
             self,
@@ -49,7 +60,6 @@ class SubRound:
             scale_factor: int
     ):
         self.schedule = [[] for _ in range(m)]
-        self.set_schedule(indicator_variables, jobs, small_jobs, solver, len(jobs), m, scale_factor)
         self.cutoff_value = cutoff_value
         self.job_size = job_size
         self.multiplicity = multiplicity
@@ -57,6 +67,7 @@ class SubRound:
         self.c = c
         self.identifier = ""
         self.name = ""
+        self.set_schedule(indicator_variables, jobs, small_jobs, solver, scale_factor)
 
     def __str__(self):
         return str(self.schedule)
@@ -164,7 +175,7 @@ class SubRound:
             jobs = []
             sum = 0
             for job, multiplicity in number_of_jobs_per_size.items():
-                sum += multiplicity*job
+                sum += multiplicity * job
                 if multiplicity > 1:
                     jobs.append(str(multiplicity) + symbol_per_job_size[job])
                 else:

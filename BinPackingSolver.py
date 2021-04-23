@@ -14,13 +14,33 @@ def get_common_denominator(jobs: [Fraction], c: Fraction):
     return current_lcm
 
 
-def solve(jobs: [Fraction], m: int, c: Fraction, cutoff_value: Fraction, job_size: Fraction, multiplicity: int, final=False):
+def solve(jobs: [Fraction],
+          m: int,
+          c: Fraction,
+          cutoff_value: Fraction,
+          job_size: Fraction,
+          multiplicity: int,
+          final=False,
+          ratio_for_greedy=0.0):
+    """"
+    solves the bin packing problem with the given jobs, machines and cutoff value
+
+    :param jobs:               jobs from previous (sub-)rounds
+    :param m:                  number of machines
+    :param c:                  competitive ratio
+    :param cutoff_value:       maximum value for the new makespan
+    :param job_size:           size of the new jobs
+    :param multiplicity:       number of times the job should be scheduled
+    :param final:              indicates when a FinalSubRound should be returned
+    :param ratio_for_greedy:   controls which jobs will be scheduled greedily
+    :return a SubRound object if a schedulong was found, else None
+    """
     model = cp_model.CpModel()
     indicator_variables = {}
 
     small_jobs, big_jobs = [], []
     for job in jobs:
-        if job / cutoff_value < 0.1:
+        if job / cutoff_value < ratio_for_greedy:
             small_jobs.append(job)
         else:
             big_jobs.append(job)
@@ -29,6 +49,7 @@ def solve(jobs: [Fraction], m: int, c: Fraction, cutoff_value: Fraction, job_siz
     scaled_jobs = [int(job * scale_factor) for job in big_jobs]
     scaled_cutoff_value = int(scale_factor * cutoff_value)
 
+    # group jobs by size
     multiplicity_per_job_size = {}
     for job in scaled_jobs:
         if job in multiplicity_per_job_size:
@@ -51,16 +72,23 @@ def solve(jobs: [Fraction], m: int, c: Fraction, cutoff_value: Fraction, job_siz
         model.Add(sum(indicator_variables[(job, j)] * job for job in multiplicity_per_job_size.keys())
                   <= scaled_cutoff_value)
 
+    # call solver
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 600.0
+    solver.parameters.max_time_in_seconds = 10
     status = solver.Solve(model)
-    print(status)
+
     if status == cp_model.OPTIMAL:
-        if final:
-            return FinalSubRound(indicator_variables, solver, big_jobs, small_jobs, cutoff_value, job_size, multiplicity, m, c, scale_factor)
-        else:
-            return SubRound(indicator_variables, solver, big_jobs, small_jobs, cutoff_value, job_size, multiplicity, m, c, scale_factor)
-    else:
-        for i in range(multiplicity):
-            jobs.pop()
-        return None
+        try:  # greedy scheduling
+            if final:
+                return FinalSubRound(indicator_variables, solver, big_jobs, small_jobs, cutoff_value, job_size,
+                                     multiplicity, m, c, scale_factor)
+            else:
+                return SubRound(indicator_variables, solver, big_jobs, small_jobs, cutoff_value, job_size,
+                                multiplicity, m, c, scale_factor)
+        except ValueError:
+            pass
+
+    # scheduling not successful, undo alteration of jobs parameter
+    for i in range(multiplicity):
+        jobs.pop()
+    return None

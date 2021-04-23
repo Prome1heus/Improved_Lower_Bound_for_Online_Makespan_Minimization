@@ -17,7 +17,7 @@ def handle_next_command(job_size: Fraction):
 
     cutoff_value = cutoff_value/c
 
-    sub_round = BinPackingSolver.solve(jobs_so_far, m, c, cutoff_value, job_size, multiplicity, False)
+    sub_round = BinPackingSolver.solve(jobs_so_far, m, c, cutoff_value, job_size, multiplicity, False, 0.1)
 
     if sub_round is None:
         print('The subround (%i, %f) could not be scheduled. Try with other values' % (multiplicity, float(job_size)))
@@ -47,7 +47,7 @@ def handle_finish():
             for _ in range(int(final_m / m)):
                 final_jobs.append(job)
         final_jobs.append(job_size)
-        last_sub_round = BinPackingSolver.solve(final_jobs, final_m, c, cutoff_value, job_size, 1, True)
+        last_sub_round = BinPackingSolver.solve(final_jobs, final_m, c, cutoff_value, job_size, 1, True, 0.1)
 
     rounds[len(rounds)-1].add_sub_round(last_sub_round)
     for round in rounds:
