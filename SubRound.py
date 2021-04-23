@@ -13,6 +13,7 @@ class SubRound:
             self,
             indicator_variables: {(int, int), IntVar},
             jobs: [Fraction],  # the sizes of the jobs
+            small_jobs: [Fraction],
             solver: cp_model,  # feasible assignment of indicator variables
             n: int,  # number of jobs to schedule
             m: int,  # number of machines
@@ -22,6 +23,16 @@ class SubRound:
             for j in range(m):
                 for i in range(solver.Value(indicator_variables[(int(job*scale_factor), j)])):
                     self.schedule[j].append(job)
+        print("_-------------------------------------------------------------------------------")
+        first = True
+        for job in reversed(small_jobs):
+            print("--")
+            self.schedule.sort(reverse=False, key=lambda machine: (sum(machine), machine))
+            self.schedule[0].append(job)
+            if sum(self.schedule[0]) > 1 and first:
+                for machine in self.schedule:
+                    print(sum(machine), machine)
+                first = False
         self.schedule.sort(reverse=True, key=lambda machine: (sum(machine), machine))
 
     def __init__(
@@ -29,6 +40,7 @@ class SubRound:
             indicator_variables: {(int, int), IntVar},
             solver: cp_model,
             jobs: [Fraction],
+            small_jobs: [Fraction],
             cutoff_value: Fraction,
             job_size: Fraction,
             multiplicity: int,
@@ -37,7 +49,7 @@ class SubRound:
             scale_factor: int
     ):
         self.schedule = [[] for _ in range(m)]
-        self.set_schedule(indicator_variables, jobs, solver, len(jobs), m, scale_factor)
+        self.set_schedule(indicator_variables, jobs, small_jobs, solver, len(jobs), m, scale_factor)
         self.cutoff_value = cutoff_value
         self.job_size = job_size
         self.multiplicity = multiplicity

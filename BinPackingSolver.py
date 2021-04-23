@@ -18,8 +18,15 @@ def solve(jobs: [Fraction], m: int, c: Fraction, cutoff_value: Fraction, job_siz
     model = cp_model.CpModel()
     indicator_variables = {}
 
-    scale_factor = get_common_denominator(jobs, c)
-    scaled_jobs = [int(job * scale_factor) for job in jobs]
+    small_jobs, big_jobs = [], []
+    for job in jobs:
+        if job / cutoff_value < 0.1:
+            small_jobs.append(job)
+        else:
+            big_jobs.append(job)
+
+    scale_factor = get_common_denominator(big_jobs, c)
+    scaled_jobs = [int(job * scale_factor) for job in big_jobs]
     scaled_cutoff_value = int(scale_factor * cutoff_value)
 
     multiplicity_per_job_size = {}
@@ -45,14 +52,14 @@ def solve(jobs: [Fraction], m: int, c: Fraction, cutoff_value: Fraction, job_siz
                   <= scaled_cutoff_value)
 
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 100.0
+    solver.parameters.max_time_in_seconds = 600.0
     status = solver.Solve(model)
-
+    print(status)
     if status == cp_model.OPTIMAL:
         if final:
-            return FinalSubRound(indicator_variables, solver, jobs, cutoff_value, job_size, multiplicity, m, c, scale_factor)
+            return FinalSubRound(indicator_variables, solver, big_jobs, small_jobs, cutoff_value, job_size, multiplicity, m, c, scale_factor)
         else:
-            return SubRound(indicator_variables, solver, jobs, cutoff_value, job_size, multiplicity, m, c, scale_factor)
+            return SubRound(indicator_variables, solver, big_jobs, small_jobs, cutoff_value, job_size, multiplicity, m, c, scale_factor)
     else:
         for i in range(multiplicity):
             jobs.pop()
