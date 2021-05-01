@@ -1,9 +1,10 @@
+import math
 from fractions import Fraction
 import numpy as np
-
 from ortools.sat.python import cp_model
 
 from FinalSubRound import FinalSubRound
+from Round import Round
 from SubRound import SubRound
 
 
@@ -12,6 +13,76 @@ def get_common_denominator(jobs: [Fraction], c: Fraction):
     for job in jobs:
         current_lcm = np.lcm(current_lcm, job.denominator)
     return current_lcm
+
+
+def complete_round(
+        jobs: [Fraction],
+        c: Fraction,
+        m: int,
+        round_id: int,
+        job_size: Fraction,
+        ratio_for_greedy):
+    """
+    :param jobs:
+    :param c:
+    :param m:
+    :param round_id
+    :param job_size
+    :param ratio_for_greedy
+    :param
+    """
+    fround = Round(round_id, m)
+
+    # binary search the number of times the initial job can be scheduled additionally
+    low, high, best = 1, m, 0
+    base_cutoff_value = 0
+    for i in range(0, len(jobs), m):
+        base_cutoff_value += jobs[i]
+    while low <= high:
+        mid = int((low + high) / 2)
+        for _ in range(mid):
+            jobs.append(job_size)
+        if solve(jobs, m, c, (base_cutoff_value + 2 * job_size) / c, job_size, mid, False, ratio_for_greedy) is None:
+            high = mid - 1
+        else:
+            low = mid + 1
+            best = mid
+            for _ in range(mid):
+                jobs.pop()
+
+    for _ in range(best):
+        jobs.append(job_size)
+
+    fround.add_sub_round(
+        solve(jobs, m, c, (base_cutoff_value + 2 * job_size) / c, job_size, best, False, ratio_for_greedy))
+
+    last_job_size = job_size
+    for i in range(best, m):
+        low = last_job_size
+        high = Fraction(round((base_cutoff_value + job_size) / (c - 1), 4))
+        print(i, low, high)
+        while low <= high - Fraction(1, 1000):
+            tried_job_size = (low + high)/2  # Fraction(round(float(low + high) / 2, 20))
+            tried_job_size = Fraction(round(tried_job_size, 4))
+            print(float(low), float(high), float(tried_job_size))
+            jobs.append(tried_job_size)
+            tried_sub_round = solve(jobs, m, c, (base_cutoff_value + job_size + tried_job_size) / c, tried_job_size, 1, False,
+                     ratio_for_greedy)
+            if tried_sub_round is None:
+                low = tried_job_size
+            else:
+                high = tried_job_size
+                optimal_job_size = tried_job_size
+                optimal_sub_round = tried_sub_round
+                jobs.pop()
+        print(float(optimal_job_size))
+        if optimal_sub_round is None:
+            raise ValueError("Help")
+        fround.add_sub_round(optimal_sub_round)
+        jobs.append(optimal_job_size)
+        last_job_size = optimal_job_size
+
+    return fround
 
 
 def solve(jobs: [Fraction],
@@ -47,6 +118,19 @@ def solve(jobs: [Fraction],
 
     scale_factor = get_common_denominator(big_jobs, c)
     scaled_jobs = [int(job * scale_factor) for job in big_jobs]
+
+    ########################################################
+    first = True
+    for i in range(len(scaled_jobs)):
+        if first:
+            try:
+                if math.log2(scaled_jobs[i]) > 31:
+                    print("Alarm", scale_factor)
+            except ValueError:
+                print("Alarm", scaled_jobs[i], big_jobs[i])
+            first = False
+    #########################################################
+
     scaled_cutoff_value = int(scale_factor * cutoff_value)
 
     # group jobs by size
@@ -74,9 +158,9 @@ def solve(jobs: [Fraction],
 
     # call solver
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 10
+    solver.parameters.max_time_in_seconds = 40
     status = solver.Solve(model)
-
+    print(status)
     if status == cp_model.OPTIMAL:
         try:  # greedy scheduling
             if final:
@@ -87,6 +171,11 @@ def solve(jobs: [Fraction],
                                 multiplicity, m, c, scale_factor)
         except ValueError:
             pass
+    elif status == cp_model.MODEL_INVALID:
+        print("-------------------------------------")
+        print(max(big_jobs))
+        print(float(cutoff_value), float(job_size))
+        print("-------------------------------------")
 
     # scheduling not successful, undo alteration of jobs parameter
     for i in range(multiplicity):

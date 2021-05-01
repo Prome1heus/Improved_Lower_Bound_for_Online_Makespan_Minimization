@@ -49,7 +49,13 @@ class Round:
             self.sub_rounds[0].set_identifier("$" + round_identifier + "$", self.index)
         else:
             for (i, sub_round) in enumerate(self.sub_rounds):
-                sub_round.set_identifier("$" + round_identifier + "_" + str(i+1) + "$", self.index)
+                sub_round.set_identifier("$" + round_identifier + "_{" + str(i+1) + "}$", self.index)
 
     def get_sub_round(self, index: int):
         return self.sub_rounds[index]
+
+    def __str__(self):
+        res = ""
+        for sub_round in self.sub_rounds:
+            res += str(sub_round) + "\n"
+        return res
