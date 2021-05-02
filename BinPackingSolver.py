@@ -21,7 +21,8 @@ def complete_round(
         m: int,
         round_id: int,
         job_size: Fraction,
-        ratio_for_greedy):
+        ratio_for_greedy: float,
+        job_multiplicity: int) -> Round:
     """
     :param jobs:
     :param c:
@@ -29,15 +30,26 @@ def complete_round(
     :param round_id
     :param job_size
     :param ratio_for_greedy
-    :param
+    :param job_multiplicity
     """
-    fround = Round(round_id, m)
+
+    print('Optimal %i' % cp_model.OPTIMAL)
+    print('Feasible %i' % cp_model.FEASIBLE)
+    print('Infeasible %i' % cp_model.INFEASIBLE)
+    print('Model_Invalid %i' % cp_model.MODEL_INVALID)
+    print('Unknown %i' % cp_model.UNKNOWN)
+
+    result = Round(round_id, m)
 
     # binary search the number of times the initial job can be scheduled additionally
     low, high, best = 1, m, 0
-    base_cutoff_value = 0
+    base_cutoff_value = Fraction(0)
+
+    # calculate lowest possible load on any machine before the round
     for i in range(0, len(jobs), m):
         base_cutoff_value += jobs[i]
+
+    # binary search how often the initial job can be scheduled
     while low <= high:
         mid = int((low + high) / 2)
         for _ in range(mid):
@@ -53,36 +65,56 @@ def complete_round(
     for _ in range(best):
         jobs.append(job_size)
 
-    fround.add_sub_round(
+    result.add_sub_round(
         solve(jobs, m, c, (base_cutoff_value + 2 * job_size) / c, job_size, best, False, ratio_for_greedy))
-
+    # complete the round
     last_job_size = job_size
-    for i in range(best, m):
+    i = best
+    while i < m:
         low = last_job_size
-        high = Fraction(round((base_cutoff_value + job_size) / (c - 1), 4))
+        high = Fraction(round((base_cutoff_value + job_size) / (c - 1), 6))
+
+        if i + job_multiplicity > m:
+            multiplicity = m - i
+        else:
+            multiplicity = job_multiplicity
+        print('multiplicity %i' % multiplicity)
+
         print(i, low, high)
-        while low <= high - Fraction(1, 1000):
-            tried_job_size = (low + high)/2  # Fraction(round(float(low + high) / 2, 20))
-            tried_job_size = Fraction(round(tried_job_size, 4))
+        # binary search the lowest job size that can be scheduled job_multiplicity times
+        optimal_sub_round, optimal_job_size = None, None
+        while low <= high:
+            # approximate the middle value to avoid that the rescaled jobs cause an integer overflow
+            tried_job_size = (low + high)/2
+            tried_job_size = Fraction(round(tried_job_size, 6))
             print(float(low), float(high), float(tried_job_size))
-            jobs.append(tried_job_size)
-            tried_sub_round = solve(jobs, m, c, (base_cutoff_value + job_size + tried_job_size) / c, tried_job_size, 1, False,
-                     ratio_for_greedy)
+            for _ in range(multiplicity):
+                jobs.append(tried_job_size)
+            tried_sub_round = solve(jobs, m, c, (base_cutoff_value + job_size + tried_job_size) / c, tried_job_size,
+                                    multiplicity, False, ratio_for_greedy)
             if tried_sub_round is None:
-                low = tried_job_size
+                low = tried_job_size + Fraction(1, 100000)
             else:
-                high = tried_job_size
+                high = tried_job_size - Fraction(1, 100000)
                 optimal_job_size = tried_job_size
                 optimal_sub_round = tried_sub_round
-                jobs.pop()
-        print(float(optimal_job_size))
-        if optimal_sub_round is None:
-            raise ValueError("Help")
-        fround.add_sub_round(optimal_sub_round)
-        jobs.append(optimal_job_size)
-        last_job_size = optimal_job_size
+                for _ in range(multiplicity):
+                    jobs.pop()
 
-    return fround
+        if optimal_sub_round is None:
+            print("here")
+            job_multiplicity = int(job_multiplicity/2)
+            if job_multiplicity == 0:
+                raise ValueError("Impossible to complete round")
+        else:
+            print(float(optimal_job_size))
+            result.add_sub_round(optimal_sub_round)
+            for _ in range(multiplicity):
+                jobs.append(optimal_job_size)
+            print(jobs)
+            last_job_size = optimal_job_size
+            i += job_multiplicity
+    return result
 
 
 def solve(jobs: [Fraction],
@@ -158,7 +190,7 @@ def solve(jobs: [Fraction],
 
     # call solver
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 40
+    solver.parameters.max_time_in_seconds = 120
     status = solver.Solve(model)
     print(status)
     if status == cp_model.OPTIMAL:
