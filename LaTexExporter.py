@@ -32,8 +32,8 @@ def write_overview(f, rounds: [Round], m: int, final_m: int, c: float):
 
 def write_analysis(f, rounds: [Round], use_images: bool):
     f.write("In the following, when analyzing the various subrounds, we will often compare " +
-            "the makespan produced by an online algorithm A in a subround to the optimum" +
-            "makespan at the end of the subround. It is clear that the optimum makespan during" +
+            "the makespan produced by an online algorithm A in a subround to the optimum " +
+            "makespan at the end of the subround. It is clear that the optimum makespan during " +
             "the subround can only be smaller. \\newline \n")
 
     for round in rounds:
