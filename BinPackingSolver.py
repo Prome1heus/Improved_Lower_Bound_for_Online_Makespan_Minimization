@@ -142,11 +142,17 @@ def solve(jobs: [Fraction],
     indicator_variables = {}
 
     small_jobs, big_jobs = [], []
+    last_job, count_for_job = 0, 0
     for job in jobs:
-        if job / cutoff_value < ratio_for_greedy:
+        if job != last_job:
+            count_for_job = 0
+            last_job = job
+        if job / cutoff_value < ratio_for_greedy and (job != Fraction(141, 500) or count_for_job < 2):
             small_jobs.append(job)
+            count_for_job += 1
         else:
             big_jobs.append(job)
+    #print('small jobs:', small_jobs)
 
     scale_factor = get_common_denominator(big_jobs, c)
     scaled_jobs = [int(job * scale_factor) for job in big_jobs]
@@ -190,7 +196,7 @@ def solve(jobs: [Fraction],
 
     # call solver
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 120
+    solver.parameters.max_time_in_seconds = 500
     status = solver.Solve(model)
     print(status)
     if status == cp_model.OPTIMAL:
@@ -203,11 +209,6 @@ def solve(jobs: [Fraction],
                                 multiplicity, m, c, scale_factor)
         except ValueError:
             pass
-    elif status == cp_model.MODEL_INVALID:
-        print("-------------------------------------")
-        print(max(big_jobs))
-        print(float(cutoff_value), float(job_size))
-        print("-------------------------------------")
 
     # scheduling not successful, undo alteration of jobs parameter
     for i in range(multiplicity):

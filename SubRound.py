@@ -3,6 +3,7 @@ from fractions import Fraction
 from ortools.sat.python import cp_model
 from ortools.sat.python.cp_model import IntVar
 import re
+import BinPackingSolver
 
 import SchedulePlotter
 
@@ -35,15 +36,38 @@ class SubRound:
                     self.schedule[j].append(job)
 
         # try to schedule the remaining jobs greedily
+        jobs_left = []
         for job in reversed(small_jobs):
             self.schedule.sort(reverse=False, key=lambda machine: (sum(machine), machine))
-            self.schedule[0].append(job)
+            if sum(self.schedule[0]) + job <= self.cutoff_value:
+                self.schedule[0].append(job)
+            else:
+                jobs_left.append(job)
+        print(jobs_left)
+        if len(jobs_left) > 0:
+            multiply_by = 1
+            sub_round = None
+            while sub_round is None:
+                multiply_by += 1
+                print('trying with %i jobs' % (self.m * multiply_by))
+                jobs = []
+                for _ in range(multiply_by):
+                    for job in jobs_left:
+                        jobs.append(job)
+                sub_round = BinPackingSolver.solve(jobs,
+                                                   multiply_by-1,
+                                                   self.c,
+                                                   self.cutoff_value,
+                                                   0,
+                                                   0)
+            print(sub_round)
+
 
         # sort the schedule for visual uniformity
         self.schedule.sort(reverse=True, key=lambda machine: (sum(machine), machine))
 
         # check if greedy scheduling was successfull
-        if self.get_makespan() > self.cutoff_value:
+        if len(jobs_left) > 0:
             raise ValueError("The small jobs could not be scheduled greedily")
 
     def __init__(

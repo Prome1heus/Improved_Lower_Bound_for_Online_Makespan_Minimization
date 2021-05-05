@@ -59,7 +59,7 @@ def handle_finish():
             for _ in range(int(final_m / m)):
                 final_jobs.append(job)
         final_jobs.append(job_size)
-        last_sub_round = BinPackingSolver.solve(final_jobs, final_m, c, cutoff_value, job_size, 1, True, 0.3)
+        last_sub_round = BinPackingSolver.solve(final_jobs, final_m, c, cutoff_value, job_size, 1, True, 0.2825)
     final_m = m
     if last_sub_round is not None:
         rounds[len(rounds) - 1].add_sub_round(last_sub_round)
