@@ -22,7 +22,8 @@ def complete_round(
         round_id: int,
         job_size: Fraction,
         ratio_for_greedy: float,
-        job_multiplicity: int) -> Round:
+        job_multiplicity: int,
+        precision: int) -> Round:
     """
     :param jobs:
     :param c:
@@ -72,7 +73,7 @@ def complete_round(
     i = best
     while i < m:
         low = last_job_size
-        high = Fraction(round((base_cutoff_value + job_size) / (c - 1), 6))
+        high = Fraction(round((base_cutoff_value + job_size) / (c - 1), precision))
 
         if i + job_multiplicity > m:
             multiplicity = m - i
@@ -86,16 +87,16 @@ def complete_round(
         while low <= high:
             # approximate the middle value to avoid that the rescaled jobs cause an integer overflow
             tried_job_size = (low + high)/2
-            tried_job_size = Fraction(round(tried_job_size, 6))
+            tried_job_size = Fraction(round(tried_job_size, precision))
             print(float(low), float(high), float(tried_job_size))
             for _ in range(multiplicity):
                 jobs.append(tried_job_size)
             tried_sub_round = solve(jobs, m, c, (base_cutoff_value + job_size + tried_job_size) / c, tried_job_size,
                                     multiplicity, False, ratio_for_greedy)
             if tried_sub_round is None:
-                low = tried_job_size + Fraction(1, 100000)
+                low = tried_job_size + Fraction(1, 10**precision)
             else:
-                high = tried_job_size - Fraction(1, 100000)
+                high = tried_job_size - Fraction(1, 10**precision)
                 optimal_job_size = tried_job_size
                 optimal_sub_round = tried_sub_round
                 for _ in range(multiplicity):
@@ -196,7 +197,7 @@ def solve(jobs: [Fraction],
 
     # call solver
     solver = cp_model.CpSolver()
-    solver.parameters.max_time_in_seconds = 500
+    solver.parameters.max_time_in_seconds = 40
     status = solver.Solve(model)
     print(status)
     if status == cp_model.OPTIMAL:

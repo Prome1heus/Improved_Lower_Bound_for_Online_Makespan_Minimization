@@ -70,7 +70,7 @@ def handle_finish():
 
 
 def handle_round(job_size, round_id, job_multiplicity):
-    round = BinPackingSolver.complete_round(jobs_so_far, c, m, round_id, job_size, 0, job_multiplicity)
+    round = BinPackingSolver.complete_round(jobs_so_far, c, m, round_id, job_size, 0, job_multiplicity, 3)
     return round
 
 
