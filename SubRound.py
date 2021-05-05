@@ -175,7 +175,10 @@ class SubRound:
         symbol_per_job_size = {}
         for round in rounds:
             for sub_round in round.sub_rounds:
-                symbol_per_job_size[sub_round.get_job_size()] = sub_round.get_identifier()
+                if sub_round.get_job_size() in symbol_per_job_size:
+                    symbol_per_job_size[sub_round.get_job_size()] += "/" + sub_round.get_identifier()
+                else:
+                    symbol_per_job_size[sub_round.get_job_size()] = sub_round.get_identifier()
         result = "The assignment on the example schedule is as follows: \n"
         result += "\\begin{itemize}\n"
 

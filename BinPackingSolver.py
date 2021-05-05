@@ -180,14 +180,14 @@ def solve(jobs: [Fraction],
             multiplicity_per_job_size[job] = 1
 
     # create indicator variables
-    for job, multiplicity in multiplicity_per_job_size.items():
+    for job, mult in multiplicity_per_job_size.items():
         for j in range(m):
-            indicator_variables[(job, j)] = model.NewIntVar(0, multiplicity,
+            indicator_variables[(job, j)] = model.NewIntVar(0, mult,
                                                             'job_%i_machine_%i' % (job, j))
 
     # ensure that each job is scheduled on exactly once
-    for job, multiplicity in multiplicity_per_job_size.items():
-        model.Add(sum(indicator_variables[(job, j)] for j in range(m)) == multiplicity)
+    for job, mult in multiplicity_per_job_size.items():
+        model.Add(sum(indicator_variables[(job, j)] for j in range(m)) == mult)
 
     # ensure that the makespan is less than the cutoff value
     for j in range(m):
