@@ -28,11 +28,13 @@ class BinPackingSolver:
             ratio_for_greedy: float,
             precision: int) -> Round:
         """
-        :param jobs:
-        :param round_id:
-        :param job_size:
-        :param ratio_for_greedy
-        :param precision:
+        schedules an entire round based on the size of the first job and the previously scheduled jobs
+        :param jobs:                jobs scheduled in previous rounds
+        :param round_id:            indicates which round it being scheduled
+        :param job_size:            given size of first job in round
+        :param ratio_for_greedy:    which proportion of jobs should be
+        :param precision:           number of decimal places considered
+        :returns                    the scheduled round
         """
 
         result = Round(round_id, self.m)
@@ -75,6 +77,14 @@ class BinPackingSolver:
             precision: int,
             ratio_for_greedy: float
     ):
+        """
+        uses binary search to determine the smallest job that can be scheduled
+        :param base_cutoff_value:   summation of the first jobs in all rounds
+        :param jobs:                previously scheduled jobs
+        :param precision:           number of decimal points considered in the binary search
+        :param ratio_for_greedy:    the ratio of jobs which should be scheduled greedily
+        :returns:                   the smallest job size as a Fraction
+        """
         # binary search the lowest job size that can be scheduled job_multiplicity times
         optimal_job_size = None
         low, high = jobs[-1], Fraction(round(base_cutoff_value / (self.c - 1), precision))
@@ -102,6 +112,14 @@ class BinPackingSolver:
             job_size: Fraction,
             ratio_for_greedy: float
     ):
+        """"
+        iteratively increases the number of jobs with size job_size until the Subround can no longer be scheduled
+        :param cutoff_value:        maximum value for resulting makespan
+        :param jobs:                previously scheduled jobs, scheduled jobs are appended
+        :param job_size:            size of the jobs in the subround
+        :param ratio_for_greedy:    the ratio of jobs which should be scheduled greedily
+        :returns                    resulting subround, number of jobs that should be scheduled
+        """
         # iterative search since successful solves are way faster than timeouts
         last_success = None
         for i in range(self.m - len(jobs) % self.m):
@@ -123,14 +141,13 @@ class BinPackingSolver:
               ratio_for_greedy=0.0):
         """"
         solves the bin packing problem with the given jobs, machines and cutoff value
-
         :param jobs:               jobs from previous (sub-)rounds
         :param cutoff_value:       maximum value for the new makespan
         :param job_size:           size of the new jobs
         :param multiplicity:       number of times the job should be scheduled
         :param final:              indicates when a FinalSubRound should be returned
         :param ratio_for_greedy:   controls which jobs will be scheduled greedily
-        :return a SubRound object if a schedulong was found, else None
+        :returns                   a SubRound object if a schedule was found, else None
         """
         model = cp_model.CpModel()
         indicator_variables = {}
