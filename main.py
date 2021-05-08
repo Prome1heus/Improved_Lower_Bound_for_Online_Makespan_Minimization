@@ -8,8 +8,7 @@ def handle_next_command(job_size: Fraction):
     multiplicity = int(input('Enter the desired number of jobs\n'))
 
     if multiplicity == -1:
-        job_multiplicity = int(input('Enter the job multiplicity\n'))
-        round = handle_round(job_size, len(rounds), job_multiplicity)
+        round = handle_round(job_size, len(rounds))
         rounds[len(rounds) - 1] = round
         rounds.append(Round(len(rounds) + 1, m))
     else:
@@ -25,7 +24,7 @@ def handle_next_command(job_size: Fraction):
 
         print(cutoff_value)
 
-        sub_round = BinPackingSolver.solve(jobs_so_far, m, c, cutoff_value, job_size, multiplicity, False, 0)
+        sub_round = BinPackingSolver.solve(jobs_so_far, m, c, cutoff_value, job_size, multiplicity, False, 0.1)
 
         if sub_round is None:
             print(
@@ -48,7 +47,7 @@ def handle_finish():
     while last_sub_round is None:
         for round in rounds:
             for sub_round in round.sub_rounds:
-                print(sub_round.job_size, sub_round.multiplicity)
+                print(float(sub_round.job_size), sub_round.multiplicity)
         final_m = int(input('Enter the number of machines for last subround\n'))
         if final_m % m != 0:
             print('The number of machines must be a multiple of m!\n')
@@ -69,8 +68,8 @@ def handle_finish():
     LaTexExporter.export(rounds, "test.out", m, final_m, c)
 
 
-def handle_round(job_size, round_id, job_multiplicity):
-    round = BinPackingSolver.complete_round(jobs_so_far, c, m, round_id, job_size, 0, job_multiplicity, 3)
+def handle_round(job_size, round_id):
+    round = BinPackingSolver.complete_round(jobs_so_far, c, m, round_id, job_size, 0.1, 3)
     return round
 
 

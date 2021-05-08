@@ -22,23 +22,16 @@ def complete_round(
         round_id: int,
         job_size: Fraction,
         ratio_for_greedy: float,
-        job_multiplicity: int,
         precision: int) -> Round:
     """
     :param jobs:
     :param c:
     :param m:
-    :param round_id
-    :param job_size
+    :param round_id:
+    :param job_size:
     :param ratio_for_greedy
-    :param job_multiplicity
+    :param precision:
     """
-
-    print('Optimal %i' % cp_model.OPTIMAL)
-    print('Feasible %i' % cp_model.FEASIBLE)
-    print('Infeasible %i' % cp_model.INFEASIBLE)
-    print('Model_Invalid %i' % cp_model.MODEL_INVALID)
-    print('Unknown %i' % cp_model.UNKNOWN)
 
     result = Round(round_id, m)
 
@@ -49,73 +42,78 @@ def complete_round(
     # calculate lowest possible load on any machine before the round
     for i in range(0, len(jobs), m):
         base_cutoff_value += jobs[i]
+    base_cutoff_value += job_size
 
-    # binary search how often the initial job can be scheduled
-    while low <= high:
-        mid = int((low + high) / 2)
-        for _ in range(mid):
-            jobs.append(job_size)
-        if solve(jobs, m, c, (base_cutoff_value + 2 * job_size) / c, job_size, mid, False, ratio_for_greedy) is None:
-            high = mid - 1
-        else:
-            low = mid + 1
-            best = mid
-            for _ in range(mid):
-                jobs.pop()
+    # schedule specified job size as often as possible
+    subround, count = \
+        schedule_job_as_often_as_possible(m, c, (base_cutoff_value + job_size) / c, jobs, job_size, ratio_for_greedy)
+    result.add_sub_round(subround)
+    print("SubRound", subround.job_size, subround.multiplicity)
+    # complete round
+    while count != m:
+        # find smallest job size
+        new_job_size = find_smallest_possible_job_size(m, c, base_cutoff_value, jobs, precision,
+                                                       ratio_for_greedy)
+        print(new_job_size)
+        # schedule as often as possible
+        subround, multiplicity = schedule_job_as_often_as_possible(m, c, (base_cutoff_value + new_job_size) / c, jobs, new_job_size,
+                                                     ratio_for_greedy)
 
-    for _ in range(best):
-        jobs.append(job_size)
-
-    result.add_sub_round(
-        solve(jobs, m, c, (base_cutoff_value + 2 * job_size) / c, job_size, best, False, ratio_for_greedy))
-    # complete the round
-    last_job_size = job_size
-    i = best
-    while i < m:
-        low = last_job_size
-        high = Fraction(round((base_cutoff_value + job_size) / (c - 1), precision))
-
-        if i + job_multiplicity > m:
-            multiplicity = m - i
-        else:
-            multiplicity = job_multiplicity
-        print('multiplicity %i' % multiplicity)
-
-        print(i, low, high)
-        # binary search the lowest job size that can be scheduled job_multiplicity times
-        optimal_sub_round, optimal_job_size = None, None
-        while low <= high:
-            # approximate the middle value to avoid that the rescaled jobs cause an integer overflow
-            tried_job_size = (low + high)/2
-            tried_job_size = Fraction(round(tried_job_size, precision))
-            print(float(low), float(high), float(tried_job_size))
-            for _ in range(multiplicity):
-                jobs.append(tried_job_size)
-            tried_sub_round = solve(jobs, m, c, (base_cutoff_value + job_size + tried_job_size) / c, tried_job_size,
-                                    multiplicity, False, ratio_for_greedy)
-            if tried_sub_round is None:
-                low = tried_job_size + Fraction(1, 10**precision)
-            else:
-                high = tried_job_size - Fraction(1, 10**precision)
-                optimal_job_size = tried_job_size
-                optimal_sub_round = tried_sub_round
-                for _ in range(multiplicity):
-                    jobs.pop()
-
-        if optimal_sub_round is None:
-            print("here")
-            job_multiplicity = int(job_multiplicity/2)
-            if job_multiplicity == 0:
-                raise ValueError("Impossible to complete round")
-        else:
-            print(float(optimal_job_size))
-            result.add_sub_round(optimal_sub_round)
-            for _ in range(multiplicity):
-                jobs.append(optimal_job_size)
-            print(jobs)
-            last_job_size = optimal_job_size
-            i += job_multiplicity
+        result.add_sub_round(subround)
+        count += multiplicity
+        print("count", count)
+        print("Subround", subround.job_size, subround.multiplicity)
     return result
+
+
+def find_smallest_possible_job_size(
+        m: int,
+        c: Fraction,
+        base_cutoff_value: Fraction,
+        jobs: [Fraction],
+        precision: int,
+        ratio_for_greedy: float
+):
+    # binary search the lowest job size that can be scheduled job_multiplicity times
+    optimal_job_size = None
+    low, high = jobs[-1], Fraction(round(base_cutoff_value / (c - 1), precision))
+    while low <= high:
+        # approximate the middle value to avoid that the rescaled jobs cause an integer overflow
+        tried_job_size = (low + high) / 2
+        tried_job_size = Fraction(round(tried_job_size, precision))
+        print(float(low), float(high), float(tried_job_size))
+        jobs.append(tried_job_size)
+        tried_sub_round = solve(jobs, m, c, (base_cutoff_value + tried_job_size) / c, tried_job_size,
+                                1, False, ratio_for_greedy)
+        if tried_sub_round is None:
+            low = tried_job_size + Fraction(1, 10 ** precision)
+        else:
+            high = tried_job_size - Fraction(1, 10 ** precision)
+            optimal_job_size = tried_job_size
+            jobs.pop()
+
+    return optimal_job_size
+
+
+def schedule_job_as_often_as_possible(
+        m: int,
+        c: Fraction,
+        cutoff_value: Fraction,
+        jobs: [Fraction],
+        job_size: Fraction,
+        ratio_for_greedy: float
+):
+    # iterative search since successful solves are way faster than timeouts
+    last_success = None
+    for i in range(m - len(jobs) % m):
+        jobs.append(job_size)
+        sub_round = solve(jobs, m, c, cutoff_value, job_size, i + 1, False, ratio_for_greedy)
+        if sub_round is None:
+            for j in range(i):
+                jobs.append(job_size)
+            return last_success, i
+        last_success = sub_round
+    return last_success, last_success.multiplicity
 
 
 def solve(jobs: [Fraction],
@@ -153,7 +151,6 @@ def solve(jobs: [Fraction],
             count_for_job += 1
         else:
             big_jobs.append(job)
-    #print('small jobs:', small_jobs)
 
     scale_factor = get_common_denominator(big_jobs, c)
     scaled_jobs = [int(job * scale_factor) for job in big_jobs]
