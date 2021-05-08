@@ -43,7 +43,7 @@ class SubRound:
                 self.schedule[0].append(job)
             else:
                 jobs_left.append(job)
-        print(jobs_left)
+
         if len(jobs_left) > 0:
             multiply_by = 1
             sub_round = None
@@ -54,14 +54,12 @@ class SubRound:
                 for _ in range(multiply_by):
                     for job in jobs_left:
                         jobs.append(job)
-                sub_round = BinPackingSolver.solve(jobs,
-                                                   multiply_by-1,
-                                                   self.c,
+                solver = BinPackingSolver.BinPackingSolver(self.m * multiply_by, self.c)
+                sub_round = solver.solve(jobs,
                                                    self.cutoff_value,
                                                    0,
                                                    0)
             print(sub_round)
-
 
         # sort the schedule for visual uniformity
         self.schedule.sort(reverse=True, key=lambda machine: (sum(machine), machine))

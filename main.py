@@ -1,4 +1,4 @@
-import BinPackingSolver
+from BinPackingSolver import BinPackingSolver
 import LaTexExporter
 from Round import Round
 from fractions import Fraction
@@ -24,7 +24,7 @@ def handle_next_command(job_size: Fraction):
 
         print(cutoff_value)
 
-        sub_round = BinPackingSolver.solve(jobs_so_far, m, c, cutoff_value, job_size, multiplicity, False, 0.1)
+        sub_round = solver.solve(jobs_so_far, cutoff_value, job_size, multiplicity, False, 0.1)
 
         if sub_round is None:
             print(
@@ -58,7 +58,7 @@ def handle_finish():
             for _ in range(int(final_m / m)):
                 final_jobs.append(job)
         final_jobs.append(job_size)
-        last_sub_round = BinPackingSolver.solve(final_jobs, final_m, c, cutoff_value, job_size, 1, True, 0.2825)
+        last_sub_round = solver.solve(final_jobs, cutoff_value, job_size, 1, True, 0.2825)
     final_m = m
     if last_sub_round is not None:
         rounds[len(rounds) - 1].add_sub_round(last_sub_round)
@@ -69,13 +69,14 @@ def handle_finish():
 
 
 def handle_round(job_size, round_id):
-    round = BinPackingSolver.complete_round(jobs_so_far, c, m, round_id, job_size, 0.1, 3)
+    round = solver.complete_round(jobs_so_far, round_id, job_size, 0.1, 3)
     return round
 
 
 if __name__ == '__main__':
     m = int(input('Enter the number of machines\n'))
     c = Fraction(input('Enter the competitive ratio\n'))
+    solver = BinPackingSolver(m, c)
     jobs_so_far: [Fraction] = []
     rounds = [Round(1, m)]
     index = 2
