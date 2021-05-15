@@ -3,12 +3,46 @@ from fractions import Fraction
 from ortools.sat.python import cp_model
 from ortools.sat.python.cp_model import IntVar
 import re
-import BinPackingSolver
 
 import SchedulePlotter
 
 
 class SubRound:
+
+    def extract_indicator_variables(
+            self,
+            indicator_variables: {(int, int), IntVar},
+            scheduled_jobs: [Fraction],
+            solver: cp_model,
+            scale_factor: int,
+            m: int
+    ):
+        """
+
+        :param indicator_variables:
+        :param scheduled_jobs:
+        :param solver:
+        :param scale_factor:
+        :return:
+        """
+        result = [[] for _ in range(m)]
+
+        # create assignment based on indicator variables
+        for job in set(scheduled_jobs):
+            for j in range(m):
+                for i in range(solver.Value(indicator_variables[(int(job * scale_factor), j)])):
+                    result[j].append(job)
+        return result
+
+    def schedule_greedily(self, small_jobs: [Fraction], schedule: [[Fraction]]):
+        # try to schedule the remaining jobs greedily
+        self.jobs_left = []
+        for job in reversed(small_jobs):
+            schedule.sort(reverse=False, key=lambda machine: (sum(machine), machine))
+            if sum(schedule[0]) + job <= self.cutoff_value:
+                schedule[0].append(job)
+            else:
+                self.jobs_left.append(job)
 
     def set_schedule(
             self,
@@ -29,43 +63,14 @@ class SubRound:
         :param scale_factor:        needed to map job sizes to indicator variables
         """
 
-        # create assignment based on indicator variables
-        for job in set(scheduled_jobs):
-            for j in range(self.m):
-                for i in range(solver.Value(indicator_variables[(int(job * scale_factor), j)])):
-                    self.schedule[j].append(job)
-
-        # try to schedule the remaining jobs greedily
-        jobs_left = []
-        for job in reversed(small_jobs):
-            self.schedule.sort(reverse=False, key=lambda machine: (sum(machine), machine))
-            if sum(self.schedule[0]) + job <= self.cutoff_value:
-                self.schedule[0].append(job)
-            else:
-                jobs_left.append(job)
-
-        if len(jobs_left) > 0:
-            multiply_by = 1
-            sub_round = None
-            while sub_round is None:
-                multiply_by += 1
-                print('trying with %i jobs' % (self.m * multiply_by))
-                jobs = []
-                for _ in range(multiply_by):
-                    for job in jobs_left:
-                        jobs.append(job)
-                solver = BinPackingSolver.BinPackingSolver(self.m * multiply_by, self.c)
-                sub_round = solver.solve(jobs,
-                                                   self.cutoff_value,
-                                                   0,
-                                                   0)
-            print(sub_round)
+        self.schedule = self.extract_indicator_variables(indicator_variables, scheduled_jobs, solver, scale_factor, self.m)
+        self.schedule_greedily(small_jobs, self.schedule)
 
         # sort the schedule for visual uniformity
         self.schedule.sort(reverse=True, key=lambda machine: (sum(machine), machine))
 
         # check if greedy scheduling was successfull
-        if len(jobs_left) > 0:
+        if len(self.jobs_left) > 0:
             raise ValueError("The small jobs could not be scheduled greedily")
 
     def __init__(
@@ -81,7 +86,8 @@ class SubRound:
             c: Fraction,
             scale_factor: int
     ):
-        self.schedule = [[] for _ in range(m)]
+        self.schedule = None
+        self.jobs_left = None
         self.cutoff_value = cutoff_value
         self.job_size = job_size
         self.multiplicity = multiplicity

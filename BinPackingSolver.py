@@ -158,7 +158,8 @@ class BinPackingSolver:
             if job != last_job:
                 count_for_job = 0
                 last_job = job
-            if job / cutoff_value < ratio_for_greedy and (job != Fraction(141, 500) or count_for_job < 2):
+            if job / cutoff_value < ratio_for_greedy and (job != Fraction(3, 10) or count_for_job < 2):
+                # print("small:", job, cutoff_value)
                 small_jobs.append(job)
                 count_for_job += 1
             else:
