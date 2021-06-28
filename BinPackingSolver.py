@@ -10,9 +10,19 @@ from SubRound import SubRound
 
 class BinPackingSolver:
 
-    def __init__(self, m, c):
+    def __init__(
+            self,
+            m:          int,
+            c:          Fraction,
+            timeout:    int):
+        """
+        :param m:           number of machines
+        :param c:           competitive ratio
+        :param timeout:     timeout for the CP-SAT solver
+        """
         self.m = m
         self.c = c
+        self.timeout = timeout
 
     def get_common_denominator(self, jobs: [Fraction]):
         current_lcm = self.c.denominator
@@ -77,7 +87,7 @@ class BinPackingSolver:
             base_cutoff_value: Fraction,
             jobs: [Fraction],
             precision: int,
-            ratio_for_greedy: float
+            ratio_for_greedy: float,
     ):
         """
         uses binary search to determine the smallest job that can be scheduled
@@ -209,7 +219,7 @@ class BinPackingSolver:
 
         # call solver
         solver = cp_model.CpSolver()
-        solver.parameters.max_time_in_seconds = 40
+        solver.parameters.max_time_in_seconds = self.timeout
         status = solver.Solve(model)
         print(status)
         if status == cp_model.OPTIMAL:

@@ -83,7 +83,8 @@ def handle_round(job_size, round_id):
 if __name__ == '__main__':
     m = int(input('Enter the number of machines\n'))
     c = Fraction(input('Enter the competitive ratio\n'))
-    solver = BinPackingSolver(m, c)
+    timeout = int(input('Enter the wanted timeout\n'))
+    solver = BinPackingSolver(m, c, timeout)
     jobs_so_far: [Fraction] = []
     rounds = [Round(1, m)]
     index = 2
