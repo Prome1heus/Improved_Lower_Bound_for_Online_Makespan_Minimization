@@ -62,6 +62,9 @@ class FinalSubRound(SubRound):
             float(self.c * self.get_makespan())) + \
                " = " + str(float(self.c)) + "\\cdot " + str(float(self.get_makespan())) + "$"
 
+    def get_overview(self):
+        return " 1 job with a processing time of " + self.identifier + " = " + str(float(self.job_size))
+
     def get_analysis(self, use_images, index, sub_round_index, rounds):
         result = "By the example schedule below, the optimum makespan is at most {0}. ".format(
             str(float(self.get_makespan())))

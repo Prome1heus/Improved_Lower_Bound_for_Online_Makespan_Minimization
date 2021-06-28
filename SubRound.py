@@ -171,7 +171,7 @@ class SubRound:
             min_cost = sum([round.sub_rounds[0].job_size for (i, round) in enumerate(rounds) if i < index])
             jobs_to_consider.append(self.get_identifier())
             min_cost += self.job_size
-        return " + ".join(jobs_to_consider) + " = $" + str(float(min_cost)) + " > " + str(
+        return " + ".join(jobs_to_consider) + " = $" + str(float(min_cost)) + " \geq " + str(
             float(self.c * self.get_makespan())) + \
                " = " + str(float(self.c)) + "\\cdot " + str(float(self.get_makespan())) + "$"
 
@@ -202,7 +202,7 @@ class SubRound:
                 else:
                     number_of_jobs_per_size[job] = 1
             result += "\\item $\\frac{" + str(multiplicity_of_machine) + "}{" + str(self.m) + \
-                      "}$ machines with a workload of "
+                      "}$m machines with a workload of "
             jobs = []
             sum = 0
             for job, multiplicity in number_of_jobs_per_size.items():
