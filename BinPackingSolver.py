@@ -62,7 +62,8 @@ class BinPackingSolver:
             self.schedule_job_as_often_as_possible((base_cutoff_value + job_size) / self.c, jobs, job_size,
                                                    ratio_for_greedy)
         result.add_sub_round(subround)
-        print("SubRound", subround.job_size, subround.multiplicity)
+        print("SubRound with %i jobs of size %f was successfully scheduled." %
+              (subround.multiplicity, float(subround.job_size), ))
         # complete round
         while count != self.m:
             # find smallest job size
@@ -78,8 +79,8 @@ class BinPackingSolver:
 
             result.add_sub_round(subround)
             count += multiplicity
-            print("count", count)
-            print("Subround", subround.job_size, subround.multiplicity)
+            print("SubRound with %i jobs of size %f was successfully scheduled." %
+                  (subround.multiplicity, float(subround.job_size),))
         return result
 
     def find_smallest_possible_job_size(
@@ -97,6 +98,8 @@ class BinPackingSolver:
         :param ratio_for_greedy:    the ratio of jobs which should be scheduled greedily
         :returns:                   the smallest job size as a Fraction
         """
+
+        print("Binary search for smallest possible job size")
         # binary search the lowest job size that can be scheduled job_multiplicity times
         optimal_job_size = None
         low, high = jobs[-1], Fraction(round(base_cutoff_value / (self.c - 1), precision))
@@ -109,8 +112,10 @@ class BinPackingSolver:
             tried_sub_round = self.solve(jobs, (base_cutoff_value + tried_job_size) / self.c, tried_job_size,
                                          1, False, ratio_for_greedy)
             if tried_sub_round is None:
+                print('Success')
                 low = tried_job_size + Fraction(1, 10 ** precision)
             else:
+                print('Failure')
                 high = tried_job_size - Fraction(1, 10 ** precision)
                 optimal_job_size = tried_job_size
                 jobs.pop()
@@ -132,6 +137,8 @@ class BinPackingSolver:
         :param ratio_for_greedy:    the ratio of jobs which should be scheduled greedily
         :returns                    resulting subround, number of jobs that should be scheduled
         """
+        print("Trying to schedule as many jobs of size %f as possible" % float(job_size))
+
         # iterative search since successful solves are way faster than timeouts
         last_success = None
         for i in range(self.m - len(jobs) % self.m):
@@ -171,7 +178,6 @@ class BinPackingSolver:
                 count_for_job = 0
                 last_job = job
             if job / cutoff_value < ratio_for_greedy and (job != Fraction(3, 10) or count_for_job < 2):
-                # print("small:", job, cutoff_value)
                 small_jobs.append(job)
                 count_for_job += 1
             else:
@@ -179,18 +185,6 @@ class BinPackingSolver:
 
         scale_factor = self.get_common_denominator(big_jobs)
         scaled_jobs = [int(job * scale_factor) for job in big_jobs]
-
-        ########################################################
-        first = True
-        for i in range(len(scaled_jobs)):
-            if first:
-                try:
-                    if math.log2(scaled_jobs[i]) > 31:
-                        print("Alarm", scale_factor)
-                except ValueError:
-                    print("Alarm", scaled_jobs[i], big_jobs[i])
-                first = False
-        #########################################################
 
         scaled_cutoff_value = int(scale_factor * cutoff_value)
 
@@ -221,7 +215,7 @@ class BinPackingSolver:
         solver = cp_model.CpSolver()
         solver.parameters.max_time_in_seconds = self.timeout
         status = solver.Solve(model)
-        print(status)
+
         if status == cp_model.OPTIMAL:
             try:  # greedy scheduling
                 if final:
