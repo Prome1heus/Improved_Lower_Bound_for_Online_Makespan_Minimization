@@ -70,6 +70,13 @@ def handle_finish():
 
 def handle_round(job_size, round_id):
     round = solver.complete_round(jobs_so_far, round_id, job_size, 0.01, 3)
+    if round is None:
+        print('Failed to complete round for a job size of %f' % float(job_size))
+        print('Job sizes of previous rounds')
+        for r in rounds:
+            for subround in r.sub_rounds:
+                print(float(subround.job_size), subround.multiplicity)
+        exit(1)
     return round
 
 

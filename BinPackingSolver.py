@@ -58,6 +58,8 @@ class BinPackingSolver:
             # find smallest job size
             new_job_size = self.find_smallest_possible_job_size(base_cutoff_value, jobs, precision,
                                                                 ratio_for_greedy)
+            if new_job_size is None:
+                return None
             print(new_job_size)
             # schedule as often as possible
             subround, multiplicity = self.schedule_job_as_often_as_possible((base_cutoff_value + new_job_size) / self.c,
