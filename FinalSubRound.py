@@ -31,7 +31,7 @@ class FinalSubRound(SubRound):
                 for _ in range(multiply_by):
                     for job in self.jobs_left:
                         jobs.append(job)
-                solver = BinPackingSolver.BinPackingSolver(multiply_by-1, self.c)
+                solver = BinPackingSolver.BinPackingSolver(multiply_by-1, self.c, 10)
                 sub_round = solver.solve(jobs, self.cutoff_value, 0, 0)
 
             print(len(schedule))
