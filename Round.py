@@ -11,7 +11,7 @@ class Round:
     def add_sub_round(self, sub_round: SubRound):
         self.sub_rounds.append(sub_round)
 
-    def get_overview(self, list_size):
+    def get_overview(self):
         if len(self.sub_rounds) == 0:
             return ""
         elif len(self.sub_rounds) == 1:

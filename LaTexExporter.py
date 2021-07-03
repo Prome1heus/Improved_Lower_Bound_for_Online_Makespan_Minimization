@@ -27,7 +27,7 @@ def write_overview(f, rounds: [Round], m: int, final_m: int, c: float):
             + str(m) + ". \\newline\n")
 
     for round in rounds:
-        f.write(round.get_overview(len(rounds)))
+        f.write(round.get_overview())
 
 
 def write_analysis(f, rounds: [Round], use_images: bool):
