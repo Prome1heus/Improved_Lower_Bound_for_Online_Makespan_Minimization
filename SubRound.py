@@ -16,14 +16,13 @@ class SubRound:
             solver: cp_model,
             scale_factor: int,
             m: int
-    ):
+    ) -> [[Fraction]]:
         """
-
-        :param indicator_variables:
-        :param scheduled_jobs:
-        :param solver:
-        :param scale_factor:
-        :return:
+        extracts the schedule from the indicator variables to a list of jobs for each machine
+        :param indicator_variables:     indicate the number of jobs of a specific size on each machine
+        :param scheduled_jobs:          jobs for which indicator variables exist
+        :param solver:                  the CP-SAT solver
+        :param scale_factor:            factor by which the jobs have been scaled
         """
         result = [[] for _ in range(m)]
 
@@ -86,6 +85,18 @@ class SubRound:
             c: Fraction,
             scale_factor: int
     ):
+        """
+        :param indicator_variables:     indicate the number of jobs of each size on each machine
+        :param solver:                  the CP-SAT solver with the values of the indicator variables
+        :param jobs:                    jobs that have been scheduöed
+        :param small_jobs:
+        :param cutoff_value:
+        :param job_size:
+        :param multiplicity:
+        :param m:
+        :param c:
+        :param scale_factor:
+        """
         self.schedule = None
         self.jobs_left = None
         self.cutoff_value = cutoff_value
@@ -117,38 +128,7 @@ class SubRound:
             makespan = max(makespan, load_on_machine)
         return makespan
 
-    def get_latex_table(self):
-        max_number_of_jobs_on_any_machine = 0
-        for machine in self.schedule:
-            max_number_of_jobs_on_any_machine = max(max_number_of_jobs_on_any_machine, len(machine))
-
-        # format table
-        result = "\\begin{table}[hp]\n"
-        result += "\\centering\n"
-        result += "\\begin{adjustbox}{width=1\\textwidth}\n"
-        result += "\\small\n"
-        result += "\\begin{tabular}{|"
-        for _ in self.schedule:
-            result += " c |"
-        result += "}\n \\hline \n"
-
-        # create rows
-        for i in range(max_number_of_jobs_on_any_machine):
-            for (j, machine) in enumerate(self.schedule):
-                if len(machine) > i:
-                    result += str(float(machine[i]))
-                if j == self.m - 1:
-                    result += "\\\\\n"
-                else:
-                    result += " & "
-            result += "\\hline\n"
-        result += "\\end{tabular}\n"
-        result += "\\end{adjustbox}\n"
-        result += "\\caption{Illustration of schedule with makespan of " + str(self.get_makespan()) + "}\n"
-        result += "\\end{table}"
-        return result
-
-    def get_image(self):
+    def get_image(self, map_size_to_round):
         result = "\\begin{figure}[!htbp]\n"
         result += "\\centering"
         result += "\\includegraphics[scale = 0.35]{" + self.name + ".png}\n"
@@ -156,7 +136,7 @@ class SubRound:
                   str(float(self.get_makespan())) + "}\n"
         result += "\\end{figure}\n"
         result += "\\FloatBarrier\n"
-        SchedulePlotter.plot_schedule(self, self.name)
+        SchedulePlotter.plot_schedule_for_subround(self, map_size_to_round)
         return result
 
     def cost_on_different_machines(self, rounds, index, sub_round_index):
@@ -216,17 +196,14 @@ class SubRound:
         result += "\\end{itemize}\n"
         return result
 
-    def get_analysis(self, use_images, index, sub_round_index, rounds):
+    def get_analysis(self,  index, sub_round_index, rounds, map_size_to_round):
         result = "By the example schedule below, the optimum makespan is at most {0}. ".format(
             str(float(self.get_makespan())))
         result += "If A does not schedule the jobs in " + self.get_formatted_name() + " on different machines, then "
         result += "its makespan is at least " + self.cost_on_different_machines(rounds, index, sub_round_index)
         result += ". \\newline \n "
         result += self.get_assignment_per_machine(rounds)
-        if use_images:
-            result += self.get_image()
-        else:
-            result += self.get_latex_table()
+        result += self.get_image(map_size_to_round)
         return result
 
     def get_multiplicity(self):

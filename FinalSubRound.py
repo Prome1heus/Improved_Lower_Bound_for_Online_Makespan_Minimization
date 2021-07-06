@@ -65,15 +65,12 @@ class FinalSubRound(SubRound):
     def get_overview(self):
         return " 1 job with a processing time of " + self.identifier + " = " + str(float(self.job_size))
 
-    def get_analysis(self, use_images, index, sub_round_index, rounds):
+    def get_analysis(self, index, sub_round_index, rounds, map_size_to_round):
         result = "By the example schedule below, the optimum makespan is at most {0}. ".format(
             str(float(self.get_makespan())))
         result += "No matter where A schedules the last job, "
         result += "its makespan is at least " + self.cost_on_different_machines(rounds, index, sub_round_index)
         result += ". \\newline \n "
         result += self.get_assignment_per_machine(rounds)
-        if use_images:
-            result += self.get_image()
-        else:
-            result += self.get_latex_table()
+        result += self.get_image(map_size_to_round)
         return result
