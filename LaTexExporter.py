@@ -44,24 +44,23 @@ def write_overview(f, rounds: [Round], m: int, final_m: int, c: float):
     for round in rounds:
         f.write(round.get_overview())
 
-    jobs, index = [], 0
-    for round in rounds:
-        for subround in round.sub_rounds:
-                jobs.append([0 for _ in range(round.index)])
-                jobs[len(jobs)-1].append(subround.job_size)
-
-    result =  "\\begin{figure}[!htbp]\n"
-    result += "\\centering"
-    result += "\\includegraphics[scale = 0.35]{overview.png}\n"
-    result += "\\caption{Overview of used job sizes }\n"
-    result += "\\end{figure}\n"
-    result += "\\FloatBarrier\n"
-
     map_size_to_round = {0.0: 0}
-    for round in rounds:
+    for round in rounds[:-1]:
         for subround in round.sub_rounds:
             map_size_to_round[float(subround.job_size)] = round.index
-    SchedulePlotter.plot_schedule(jobs, "overview", len(jobs), map_size_to_round=map_size_to_round)
+
+    for round in rounds[:-1]:
+        result =  "\\begin{figure}[!htbp]\n"
+        result += "\\centering"
+        result += "\\includegraphics[scale = 0.35]{overview_" + str(round.index) + ".png}\n"
+        result += "\\caption{Overview of used job sizes in Round "+ str(round.index) + "}\n"
+        result += "\\end{figure}\n"
+        result += "\\FloatBarrier\n"
+        jobs = []
+        for subround in round.sub_rounds:
+            for _ in range(subround.multiplicity):
+                jobs.append([subround.job_size])
+        SchedulePlotter.plot_schedule(jobs, "overview_" + str(round.index), m, map_size_to_round=map_size_to_round)
 
 
 def write_analysis(f, rounds: [Round]):
@@ -74,7 +73,7 @@ def write_analysis(f, rounds: [Round]):
             "the subround can only be smaller. \\newline \n")
 
     map_size_to_round = {0.0: 0}
-    for round in rounds:
+    for round in rounds[:-1]:
         for subround in round.sub_rounds:
             map_size_to_round[float(subround.job_size)] = round.index
 

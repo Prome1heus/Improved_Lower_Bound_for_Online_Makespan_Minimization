@@ -72,5 +72,5 @@ class FinalSubRound(SubRound):
         result += "its makespan is at least " + self.cost_on_different_machines(rounds, index, sub_round_index)
         result += ". \\newline \n "
         result += self.get_assignment_per_machine(rounds)
-        result += self.get_image(map_size_to_round)
+        result += self.get_image(map_size_to_round, final=True)
         return result

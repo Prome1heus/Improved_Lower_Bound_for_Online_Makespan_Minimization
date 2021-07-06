@@ -128,7 +128,7 @@ class SubRound:
             makespan = max(makespan, load_on_machine)
         return makespan
 
-    def get_image(self, map_size_to_round):
+    def get_image(self, map_size_to_round, final=False):
         result = "\\begin{figure}[!htbp]\n"
         result += "\\centering"
         result += "\\includegraphics[scale = 0.35]{" + self.name + ".png}\n"
@@ -136,7 +136,7 @@ class SubRound:
                   str(float(self.get_makespan())) + "}\n"
         result += "\\end{figure}\n"
         result += "\\FloatBarrier\n"
-        SchedulePlotter.plot_schedule_for_subround(self, map_size_to_round)
+        SchedulePlotter.plot_schedule_for_subround(self, map_size_to_round, final)
         return result
 
     def cost_on_different_machines(self, rounds, index, sub_round_index):
