@@ -10,11 +10,7 @@ from SubRound import SubRound
 
 class BinPackingSolver:
 
-    def __init__(
-            self,
-            m:          int,
-            c:          Fraction,
-            timeout:    int):
+    def __init__(self, m: int, c: Fraction, timeout: int):
         """
         :param m:           number of machines
         :param c:           competitive ratio
@@ -24,7 +20,12 @@ class BinPackingSolver:
         self.c = c
         self.timeout = timeout
 
-    def get_common_denominator(self, jobs: [Fraction]):
+    def get_common_denominator(self, jobs: [Fraction]) -> int:
+        """
+        computes the smallest integer which can be used to scale c and all jobs to integers
+        :param jobs:    jobs that need to be scaled
+        :returns:       the lowest common multiple multiple of the denominators of c and all jobs
+        """
         current_lcm = self.c.denominator
         for job in jobs:
             current_lcm = np.lcm(current_lcm, job.denominator)
@@ -177,7 +178,7 @@ class BinPackingSolver:
             if job != last_job:
                 count_for_job = 0
                 last_job = job
-            if job / cutoff_value < ratio_for_greedy and (job != Fraction(3, 10) or count_for_job < 2):
+            if job / cutoff_value < ratio_for_greedy and (job != Fraction(282, 1000) or count_for_job < 1):
                 small_jobs.append(job)
                 count_for_job += 1
             else:

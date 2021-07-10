@@ -1,3 +1,4 @@
+import string
 from fractions import Fraction
 
 from ortools.sat.python import cp_model
@@ -88,14 +89,14 @@ class SubRound:
         """
         :param indicator_variables:     indicate the number of jobs of each size on each machine
         :param solver:                  the CP-SAT solver with the values of the indicator variables
-        :param jobs:                    jobs that have been scheduöed
-        :param small_jobs:
-        :param cutoff_value:
-        :param job_size:
-        :param multiplicity:
-        :param m:
-        :param c:
-        :param scale_factor:
+        :param jobs:                    jobs that have been scheduled
+        :param small_jobs:              jobs that still have to be scheduled greedily
+        :param cutoff_value:            maximum allowed makespan
+        :param job_size:                size of the jobs in the subround
+        :param multiplicity:            number of jobs in the subround
+        :param m:                       number of machines
+        :param c:                       competitive ratio
+        :param scale_factor:            integer by which the jobs have been scaled for the integer variables
         """
         self.schedule = None
         self.jobs_left = None
@@ -112,6 +113,9 @@ class SubRound:
         return str(self.schedule)
 
     def get_overview(self):
+        """
+        :return: description of the subround by multiplicity and job size
+        """
         if self.multiplicity == self.m:
             number_of_jobs = "m"
         else:
@@ -120,6 +124,9 @@ class SubRound:
                " = " + str(float(self.job_size))
 
     def get_makespan(self):
+        """
+        :return: a fraction representing the makespan of the schedule
+        """
         makespan = 0
         for machine in self.schedule:
             load_on_machine = 0
@@ -129,6 +136,11 @@ class SubRound:
         return makespan
 
     def get_image(self, map_size_to_round, final=False):
+        """
+        :param          map_size_to_round: maps job sizes to the round they belong to
+        :param final:   indicates if it is the last subround
+        :return:        latex code for embedding the image as string
+        """
         result = "\\begin{figure}[!htbp]\n"
         result += "\\centering"
         result += "\\includegraphics[scale = 0.35]{" + self.name + ".png}\n"
@@ -139,7 +151,14 @@ class SubRound:
         SchedulePlotter.plot_schedule_for_subround(self, map_size_to_round, final)
         return result
 
-    def cost_on_different_machines(self, rounds, index, sub_round_index):
+    def cost_on_different_machines(self, rounds: Fraction, index: int, sub_round_index: int) -> string:
+        """
+        :param rounds:                  all rounds of the job sequence
+        :param index:                   index of the current round
+        :param sub_round_index:         index of the current subround
+        :return: calculation using symbols of the makespan if two jobs from
+                the current round are scheduled on the same machine
+        """
         if sub_round_index == 1:
             jobs_to_consider = [round.sub_rounds[0].get_identifier() for (i, round) in enumerate(rounds) if
                                 i < index - 1]
@@ -155,7 +174,11 @@ class SubRound:
             float(self.c * self.get_makespan())) + \
                " = " + str(float(self.c)) + "\\cdot " + str(float(self.get_makespan())) + "$"
 
-    def get_assignment_per_machine(self, rounds):
+    def get_assignment_per_machine(self, rounds: [Fraction]):
+        """
+        :param rounds:  all rounds of the job sequence
+        :return:        a description of load on each machine
+        """
         symbol_per_job_size = {}
         for round in rounds:
             for sub_round in round.sub_rounds:
@@ -174,6 +197,7 @@ class SubRound:
             else:
                 multiplicity_per_schedule[tuple(machine)] = 1
 
+        # describe load for each type of machine
         for machine, multiplicity_of_machine in multiplicity_per_schedule.items():
             number_of_jobs_per_size = {}
             for job in machine:
@@ -197,6 +221,14 @@ class SubRound:
         return result
 
     def get_analysis(self,  index, sub_round_index, rounds, map_size_to_round):
+        """
+        :param index:               index of the round
+        :param sub_round_index:     index of the sub round
+        :param rounds:              all round of the job sequence
+        :param map_size_to_round:   maps job sizes to round indices
+        :return:                    the proof that each online algorithm with a competitive ratio of at most c
+                                    does not schedule two jobs from the same round on one machine
+        """
         result = "By the example schedule below, the optimum makespan is at most {0}. ".format(
             str(float(self.get_makespan())))
         result += "If A does not schedule the jobs in " + self.get_formatted_name() + " on different machines, then "

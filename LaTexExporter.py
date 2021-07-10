@@ -1,5 +1,3 @@
-from fractions import Fraction
-
 import SchedulePlotter
 from Round import Round
 
