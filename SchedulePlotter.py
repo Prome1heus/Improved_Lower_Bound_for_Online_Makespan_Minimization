@@ -4,21 +4,19 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-# heavily inspired by https://stackoverflow.com/a/50205834
 def plot_stacked_bar(
         data: [[Fraction]],
         cutoff_value: Fraction,
         m: int,
         map_size_to_round: {Fraction: int},
-        show_values=False,
         final=False
 ):
     """
+    heavily inspired by https://stackoverflow.com/a/50205834
     :param data:                    layers of the optimal schedule
     :param cutoff_value:            maximum allowed makespan
     :param m:                       number of machines
     :param map_size_to_round:       maps job sizes to the round they belong
-    :param show_values:             TODO: to remove
     :param final:                   indicates if it is the final round
     """
     ind = list(range(m))
@@ -45,15 +43,6 @@ def plot_stacked_bar(
 
     plt.grid()
 
-    # TODO: remove
-    if show_values:
-        for axis in axes:
-            for bar in axis:
-                w, h = bar.get_width(), bar.get_height()
-                if bar.get_height() > 0:
-                    plt.text(bar.get_x() + w / 2, bar.get_y() + h / 2,
-                             h, ha="center",
-                             va="center")
     # visualize cutoff value
     if cutoff_value is not None:
         plt.hlines(cutoff_value, -1, m)
@@ -80,14 +69,13 @@ def plot_schedule(
         map_size_to_round=None,
         final=False
 ):
+    # compute number of bar chars that need to be stacked
     max_number_of_jobs_on_machine = 0
     for machine in schedule:
         max_number_of_jobs_on_machine = max(max_number_of_jobs_on_machine, len(machine))
 
+    # go from jobs per machine to layers of jobs in stacked bar chart
     layers = [[] for _ in range(max_number_of_jobs_on_machine)]
-
-    plt.figure(figsize=(20, 5))
-
     for i in range(max_number_of_jobs_on_machine):
         for j in range(m):
             if len(schedule[j]) > i:
@@ -95,6 +83,6 @@ def plot_schedule(
             else:
                 layers[i].append(0.0)
 
+    plt.figure(figsize=(20, 5))
     plot_stacked_bar(layers, cutoff_value, m, map_size_to_round, final=final)
-
     plt.savefig(figure_name + '.png')
