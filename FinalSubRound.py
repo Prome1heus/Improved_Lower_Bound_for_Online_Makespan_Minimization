@@ -52,10 +52,8 @@ class FinalSubRound(SubRound):
             for _ in range(multiply_by):
                 for machine in schedule:
                     self.schedule.append(machine)
-            print(len(self.schedule))
             self.schedule.extend(sub_round.schedule)
             self.schedule.append([Fraction(1)])
-            print(len(self.schedule))
             self.m *= multiply_by
         else:
             self.schedule = schedule
