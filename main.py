@@ -1,3 +1,6 @@
+import getopt
+import sys
+
 from BinPackingSolver import BinPackingSolver
 import LaTexExporter
 from Round import Round
@@ -24,7 +27,7 @@ def handle_next_command(job_size: Fraction):
 
         print(cutoff_value)
 
-        sub_round = solver.solve(jobs_so_far, cutoff_value, job_size, multiplicity, False, 0.01)
+        sub_round = solver.solve(jobs_so_far, cutoff_value, job_size, multiplicity, False, greedy_ratio)
 
         if sub_round is None:
             print(
@@ -37,6 +40,10 @@ def handle_next_command(job_size: Fraction):
 
 
 def handle_finish():
+    if len(jobs_so_far) % m != 0:
+        print("previous round inccomplete, exiting")
+        exit(1)
+
     job_size = Fraction(input('Enter the last job\n'))
     last_sub_round = None
     cutoff_value = 0
@@ -58,7 +65,7 @@ def handle_finish():
             for _ in range(int(final_m / m)):
                 final_jobs.append(job)
         final_jobs.append(job_size)
-        last_sub_round = solver.solve(final_jobs, cutoff_value, job_size, 1, True, 0.32)
+        last_sub_round = solver.solve(final_jobs, cutoff_value, job_size, 1, True, final_greedy_ratio)
     final_m = m
     if last_sub_round is not None:
         rounds[len(rounds) - 1].add_sub_round(last_sub_round)
@@ -69,7 +76,7 @@ def handle_finish():
 
 
 def handle_round(job_size, round_id):
-    round = solver.complete_round(jobs_so_far, round_id, job_size, 0.01, 3)
+    round = solver.complete_round(jobs_so_far, round_id, job_size, greedy_ratio, 3)
     if round is None:
         print('Failed to complete round for a job size of %f' % float(job_size))
         print('Job sizes of previous rounds')
@@ -81,9 +88,31 @@ def handle_round(job_size, round_id):
 
 
 if __name__ == '__main__':
+    # default values for command line options
+    timeout = 40
+    greedy_ratio = 0.01
+    final_greedy_ratio = 0.2
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "t:g:f:",
+                                   ["timeout=", "greedy_ratio=", "final_greedy_ratio="])
+    except getopt.GetoptError:
+        print("Command line arguments could not be parsed")
+        exit(1)
+
+    # parse command line arguments
+    for opt, arg in opts:
+        if opt in ("-t", "--timeout"):
+            timeout = int(arg)
+        elif opt in ("-g", "--greedy_ratio"):
+            greedy_ratio = float(arg)
+        elif opt in ("-f", "--final_greedy_ratio"):
+            final_greedy_ratio = float(arg)
+        else:
+            print("unknown command line option: " + opt)
+            exit(1)
+
     m = int(input('Enter the number of machines\n'))
     c = Fraction(input('Enter the competitive ratio\n'))
-    timeout = int(input('Enter the wanted timeout\n'))
     solver = BinPackingSolver(m, c, timeout)
     jobs_so_far: [Fraction] = []
     rounds = [Round(1, m)]
