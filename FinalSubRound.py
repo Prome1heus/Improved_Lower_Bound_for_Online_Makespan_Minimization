@@ -32,7 +32,7 @@ class FinalSubRound(SubRound):
         if len(self.jobs_left) > 0:
             multiply_by = 1
             sub_round = None
-            while sub_round is None:
+            while sub_round is None and multiply_by < 5:
                 multiply_by += 1
                 print('trying with %i jobs' % (self.m * multiply_by))
                 jobs = []
@@ -43,8 +43,11 @@ class FinalSubRound(SubRound):
                 solver = BinPackingSolver.BinPackingSolver(multiply_by-1, self.c, 10)
                 sub_round = solver.solve(jobs, self.cutoff_value, 0, 0)
 
+            if sub_round is None:
+                print('Upscaling not possible')
+                exit(1)
 
-            schedule.remove([Fraction(1)])
+            schedule.pop(0)
             self.schedule = []
             for _ in range(multiply_by):
                 for machine in schedule:
@@ -70,7 +73,7 @@ class FinalSubRound(SubRound):
         """
         jobs_to_consider = [round.sub_rounds[0].get_identifier() for (i, round) in enumerate(rounds) if i < index]
         min_cost = sum([round.sub_rounds[0].job_size for (i, round) in enumerate(rounds) if i < index])
-        return " + ".join(jobs_to_consider) + " = $" + str(float(min_cost)) + " > " + str(
+        return " + ".join(jobs_to_consider) + " = $" + str(float(min_cost)) + " \geq " + str(
             float(self.c * self.get_makespan())) + \
                " = " + str(float(self.c)) + "\\cdot " + str(float(self.get_makespan())) + "$"
 
