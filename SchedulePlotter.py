@@ -86,3 +86,4 @@ def plot_schedule(
     plt.figure(figsize=(20, 5))
     plot_stacked_bar(layers, cutoff_value, m, map_size_to_round, final=final)
     plt.savefig(figure_name + '.png')
+    plt.close()
