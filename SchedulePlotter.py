@@ -38,7 +38,7 @@ def plot_stacked_bar(
                             bottom=current_bottom,
                             color=color,
                             edgecolor='black',
-                            linewidth=0.5))
+                            linewidth=1))
         current_bottom += row_data
 
     plt.grid()
